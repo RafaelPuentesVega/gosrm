@@ -1,0 +1,38 @@
+# Laravel specific files
+/vendor
+/node_modules
+/public/storage
+/storage/*.key
+/.env
+Homestead.json
+Homestead.yaml
+.env.backup
+
+# Laravel 5 & 6 specific files
+.phpunit.result.cache
+/storage/logs
+/storage/framework/cache
+/storage/framework/sessions
+/storage/framework/testing
+/storage/framework/views
+
+# Ignore IDE files
+.idea
+*.sublime-project
+*.sublime-workspace
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Ignore composer files
+composer.lock
+
+# Ignore npm files
+npm-debug.log
+yarn-error.log
+
+# Ignore other system files
+.vscode
+.vscode/*
