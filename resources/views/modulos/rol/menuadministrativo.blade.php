@@ -14,10 +14,10 @@
 
 
 
- <aside class="sidebar" data-color="azure" data-image="{!! url('assets/img/sidebar-refill.jpg') !!}">
+ <aside class="sidebar"   data-image="{!! url('assets/img/sidebar-refill.jpg') !!}">
 
 
-     <div class="sidebar-wrapper" >
+     <div class="sidebar-wrapper" style="background: linear-gradient(45deg, rgb(47, 99, 184) 0%, rgb(114, 86, 156) 50%, rgb(1, 58, 114) 100%);">
          <div class="logo" >
              <a href="{{url('inicio')}}" class="simple-text" >
                  <img src="{!! url('assets/img/logo-refill.png') !!}" style="    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.651))" width="140" height="60" >
@@ -31,6 +31,12 @@
                      <p>BANDEJA DE ENTRADA</p>
                  </a>
              </li>
+             <li @if (Request::url() == route('home-tecnico')) class="active" @endif >
+                <a href="{{url('inicio-tecnico')}}">
+                    <i class="pe-7s-tools"></i>
+                    <p>ORDENES TECNICOS</p>
+                </a>
+            </li>
              <li  @if (Request::url() == route('orden')) class="active" @endif>
                  <a href="{{ url('crear_orden_servicio') }}">
                      <i class="pe-7s-note2"></i>
@@ -74,7 +80,25 @@
                      <p>PARAMETROS</p>
                  </a>
              </li>
-             <li @if (Request::url() == route('correos')) class="active" @endif>
+             <li @if (Request::url() == route('productos')) class="active" @endif>
+                <a href="{{ url('productos') }}">
+                    <i class="pe-7s-headphones"></i>
+                    <p>PRODUCTOS</p>
+                </a>
+            </li>
+            <li @if (Request::url() == route('remisiones')) class="active" @endif>
+                <a href="{{ url('remisiones') }}">
+                    <i class="pe-7s-cash"></i>
+                    <p>REMISIONES</p>
+                </a>
+            </li>
+            <li @if (Request::url() == route('caja')) class="active" @endif>
+                <a href="{{ url('caja') }}">
+                    <i class="pe-7s-calculator"></i>
+                    <p>CAJA</p>
+                </a>
+            </li>
+            <li @if (Request::url() == route('correos')) class="active" @endif>
                 <a href="{{ url('correos') }}">
                     <i class="pe-7s-mail-open-file"></i>
                     <p>PLANTILLAS CORREO</p>
@@ -92,13 +116,6 @@
                     <p>USUARIOS</p>
                 </a>
             </li>
-            <li @if (Request::url() == route('caja')) class="active" @endif>
-                <a href="{{ url('caja') }}">
-                    <i class="pe-7s-calculator"></i>
-                    <p>CAJA</p>
-                </a>
-            </li>
-
 
 
          </ul>

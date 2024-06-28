@@ -144,6 +144,62 @@ class InicioController extends Controller
     }
 
     /**
+     * Show the ordenes de servicio como administrador
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function indexTecnicoAdministrador(Request $request)
+    {
+
+        try {
+            $ordenServicio = OrdenServicio:://DB::table('orden_servicio as orden')
+            join('cliente', 'id_cliente_orden', '=', 'cliente.cliente_id')
+            ->join('equipo', 'id_equipo_orden', '=', 'equipo.equipo_id')
+            ->whereNull('fecha_entrega_orden' )
+            ->where('estadoOrden','1')->get()->toArray();
+
+            $ordenServicioListas = OrdenServicio::
+            whereNull('fecha_entrega_orden' )
+            ->where('estadoOrden','2')->get()->toArray();
+
+            $control = sizeof($ordenServicio) - 1;
+            $fechaActual = date('Y-m-d H:i');
+            $vencidas[] = null;
+            $vigentes[] = null ;
+            for ($i = 0; $i <= $control; $i++) {
+
+                $fechaEstimada = $ordenServicio[$i]['fecha_estimada_orden'];
+
+                if($fechaActual >  $fechaEstimada){
+                    $vencidas[] = $ordenServicio[$i];
+                }
+                if($fechaActual <=  $fechaEstimada){
+                    $vigentes[] = $ordenServicio[$i];
+                }
+
+
+            }
+            $tamañoListas =    sizeof($ordenServicioListas);
+            $tamañoVencidas = count($vencidas)-1;
+            $tamañovigentes = count($vigentes) -1 ;
+              //CONSULTA PARA TRAER LOS TECNICOS A VISTA DE ADMINISTRADORES
+            $user = User::where('rol','Tecnico')
+            ->orWhere('rol', 'Coordinador Técnico')->get();
+
+
+
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+
+        return view('modulos.inicio.inicio-tecnicos')
+        ->with('vigentes' ,$vigentes)
+        ->with('vencidas' ,$vencidas)->with('user' ,$user)
+        ->with('tamañoVencidas' ,$tamañoVencidas)
+        ->with('tamañovigentes' ,$tamañovigentes)
+        ->with('tamañoListas' ,$tamañoListas) ;
+    }
+    /**
      * Show the form for creating a new resource.
      *
      * @return \Illuminate\Http\Response

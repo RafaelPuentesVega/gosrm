@@ -18,6 +18,7 @@ use App\Http\Controllers\Auth;
 //use Mail;
 //use EmailPdf;
 use App\Mail\EmailPdf as MailEmailPdf;
+use App\Models\Observacion;
 use App\Models\TipoEquipo;
 use Carbon\Carbon;
 
@@ -513,6 +514,7 @@ class OrdenServicioController extends Controller
         $ordenServicio->id_cliente_orden = $idcliente;
         $ordenServicio->id_cliente_usuario_orden = $idUsuarioEmpresa;
         $ordenServicio->fecha_creacion_orden = $fechaActual;
+        $ordenServicio->fecha_diagnostico_orden = $fechaActual;
         $ordenServicio->fecha_estimada_orden = $fechaVencimiento;
         $ordenServicio->id_equipo_orden = $request->equipo_id;
         $ordenServicio->accesorios_orden = $request->accesorios;
@@ -530,13 +532,15 @@ class OrdenServicioController extends Controller
         $ordenServicio->save();
         $response = Array('mensaje' => 'save'   );
         $response['dataOrden'] =$ordenServicio->toArray();//Devolvemos a la vista el array del cliente recien registrado
-     return json_encode($response);
-     $ordenServicio->toArray();
-            //  $idOrden = $ordenServicio['id'];
-            //  $prueba = 6 ;
-            // $files = $this->generateFilesPDF([ ]);
-
-            //$pasarPdf =  $this->generateFilesPDF($idOrden);
+        //Guardar observacion automatica
+        Observacion::insert([
+            'id_ordenServicio' => $ordenServicio->id,
+            'tipo_observacion' => '1', // Diagnostico
+            'descripcion_observacion' => 'DIAGNOSTICO AUTOMATICO',
+            'user_observacion' => $userCreated,
+            'created_at_observacion' => now()
+        ]);
+        return json_encode($response);
    }
 
    public function ordenEntradaEmailAndPDF(Request $request , $idOrden  )

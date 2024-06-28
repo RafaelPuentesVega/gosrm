@@ -170,12 +170,35 @@ class ClientesController extends Controller
 
     public function consultarCliente(Request $request){
 
-        $data = $request->all();
-             $response = Array("mensaje"=>"ok");
-             $response['data'] = DB::table('cliente')
-                ->where('cliente_id', '=', $data['id'])
-                ->get()->toArray();
-             return json_encode($response);
+        $response = [
+            'success'=> true,
+            'mensaje' => 'ok',
+            'data' => []
+        ];
+        try {
+            $data = $request->all();
+            
+            $query =  DB::table('cliente');
+            if($request->get('id')){
+                $query = $query->where('cliente_id', '=', $request->get('id'));
+            }
+
+            if($request->get('documento')){
+                $query = $query->where('cliente_documento', '=', $request->get('documento'));
+            }
+
+
+            $response['data'] =$query->get()->toArray();
+
+        } catch (\Exception $e) {
+            $response = [
+                'success'=> false,
+                'mensaje' => 'error',
+                'data' => []
+            ];
+        }
+        return json_encode($response);
+             
     }
     public function consultarClienteEnter(Request $request){
 

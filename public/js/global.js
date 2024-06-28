@@ -47,6 +47,24 @@ $(document).ready(function() {
         $(this).find('i').toggleClass('fa-eye-slash').toggleClass('fa-eye');
     });
 });
+function validarCamposObligatorios(formulario) {
+    var form = $(formulario)[0];
+    var isValid = true;
+
+    $(form).find(':input[required]').each(function() {
+        if (!$(this).val()) {
+            isValid = false;
+            return false; 
+        }
+    });
+
+    return isValid;
+}
+function formatoPrecio(input) {
+    let valor = input.value.replace(/\D/g, ""); 
+    valor = Number(valor).toLocaleString('es-ES');
+    input.value = valor;
+}
 
 $('#changePasswordBtn').click(function() {
 

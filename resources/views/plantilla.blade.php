@@ -6,7 +6,8 @@
         <meta name="csrf-token" content="{{ csrf_token() }}" />
         <title>Refill Mate - Orden de servicio</title>
             <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-
+        
+        <link href="{!! url('css/style-global.css?version=1.0') !!}" rel="stylesheet" />
         <link href="{!! url('fontawesome/css/all.css') !!}" rel="stylesheet"/>
         <link rel="shortcut icon" href="{!! url('assets/img/logo.ico') !!}" type="image/x-icon">
         <link href="{!! url('css/sb-admin-2.css?version=1.0') !!}" rel="stylesheet" />

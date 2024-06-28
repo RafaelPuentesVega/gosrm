@@ -1,7 +1,7 @@
 <!-- Button to trigger the modal -->
-<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#changePasswordModal">
+{{-- <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#changePasswordModal">
     Cambiar clave
-</button>
+</button> --}}
 
 <!-- Modal -->
 <div class="modal fade" id="changePasswordModal" tabindex="-1" role="dialog" aria-labelledby="changePasswordModalLabel" aria-hidden="true">

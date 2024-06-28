@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Productos;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -64,6 +65,29 @@ class AutocompleteController extends Controller
         }
         return  $response;
     }
+
+    public function autocompleteDocumento(Request $request){
+        $response = '';
+        $term = $request->get('term');
+
+        if(!empty($term)){
+            $clientes = DB::table('cliente')
+            ->where('cliente_documento', 'like','%'.$term . '%')
+            ->select('cliente_documento','cliente_nombres' ,'cliente_id')
+            ->distinct('cliente_documento')
+            ->get();
+
+            $result = [];
+            foreach ($clientes as $cliente) {
+                $result[] = ['label' => $cliente->cliente_documento.'-'.$cliente->cliente_nombres, 'value' => $cliente->cliente_id];
+            }
+    
+
+        }
+        return response()->json($result);
+    }
+
+
     public function BuscarRepuestoOrden(Request $request){
         $response = '';
         if(!empty($request->repuesto)){
@@ -77,6 +101,31 @@ class AutocompleteController extends Controller
                 }
         }
         return  $response;
+    }
+
+    public function autocompleteNombreProducto(Request $request){
+
+        try {
+            $term = $request->get('term');
+            $result = [];
+            if(!empty($term)){
+                $productos = Productos::orWhere('nombre', 'like','%'.$term . '%')
+                ->orWhere('marca', 'like','%'.$term . '%')
+                ->orWhere('proveedor', 'like','%'.$term . '%')
+                ->orWhere('codigo_barras', 'like','%'.$term . '%')
+                ->get();    
+                
+                foreach ($productos as $producto) {
+                    $result[] = ['label' => $producto->nombre.'-'.$producto->marca.'-'.$producto->modelo, 'value' => $producto->id];
+                }        
+    
+            }
+        } catch (\Throwable $th) {
+
+        }
+
+
+        return response()->json($result);
     }
 
 }

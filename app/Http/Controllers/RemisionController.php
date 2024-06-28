@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use IntlDateFormatter;
 
-class CajaController extends Controller
+class RemisionController extends Controller
 {
   //
   public function __construct()
@@ -21,29 +21,29 @@ class CajaController extends Controller
   {
     if(auth()->user()->rol != 'ADMINISTRATIVO'){
       return redirect('inicio');
+    }
+    return view('modulos.remisiones.index');
   }
-    return view('modulos.caja.index');
-  }
-  public function saveMovimiento(Request  $request)
+  public function autocompleteDocumento(Request  $request)
   {
 
-    $response = ["status" => true, "message" => "guardado con exito"];
+    $response = ["status" => true, "message" => "consultado con exito"];
     try {
-      $saveData = [
-        "valor" => $request->get('valor'),
-        "descripcion" => $request->get('descripcion'),
-        "tipo" => $request->get('tipo'),
-        "orden_id" => $request->get('num_orden'),
-        "user_creation" => auth()->user()->name,
-        "metodo_pago" => $request->get('metodo_pago'),
-      ];
 
-      MovimientosCaja::create($saveData);
+      $term = $request->get('term');
+      $productos = Producto::where('nombre', 'LIKE', '%' . $term . '%')->get();
+      
+      $result = [];
+      foreach ($productos as $producto) {
+          $result[] = ['label' => $producto->nombre, 'value' => $producto->id];
+      }
+
+
     } catch (\Exception $e) {
-      $response = ["status" => false, "message" => "Ocurrio un error guardando", "error" => $e->getMessage()];
+      $response = ["status" => false, "message" => "Ocurrio un error consultando", "error" => $e->getMessage()];
     }
 
-    return response()->json($response);
+    return response()->json($result);
   }
 
   public function getDataMovimientos(Request $request)

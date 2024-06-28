@@ -154,7 +154,9 @@ function getDataMovimientos(){
             fechaInicial: fechaInicial,
             fechaFinal: fechaFinal
         },
-        success: function (data) {
+        success: function (data) {            
+            //ocultar spinner
+            hidepreloader();
             if (data.status == true) {
                 Swal.fire({
                     icon: 'success',
@@ -162,8 +164,6 @@ function getDataMovimientos(){
                     timer: 1000,
                     showConfirmButton: false
                 });
-                //ocultar spinner
-                hidepreloader();
                 var total = parseFloat(data.total.replace(/\./g, '').replace(',', '.')); // Convertir formato a número
                 var egreso = parseFloat(data.egreso.replace(/\./g, '').replace(',', '.')); // Convertir formato a número
                 var ingreso = parseFloat(data.ingreso.replace(/\./g, '').replace(',', '.')); // Convertir formato a número

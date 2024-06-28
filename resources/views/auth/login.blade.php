@@ -23,7 +23,7 @@
 
 </head>
 
-<body class="" style="background: linear-gradient(39deg, rgba(42,41,144,1) 6%, rgba(91,144,222,1) 50%, rgba(31,37,131,1) 94%);">
+<body class="" style="background: linear-gradient(45deg, rgb(176, 187, 205) 0%, rgb(114, 86, 156) 50%, rgb(1, 58, 114) 100%);">
 
     @if(Request::get('resetPassword') == 'true')
         @include('auth.reset-password')
@@ -46,7 +46,7 @@
                                         <h1 class="h4 text-gray-900 mb-2"><strong>Bienvenido!</strong></h1>
                                     </div>
                                     <div class="text-center">
-                                        <img style="width: 20%; margin: 3%" class="" src="{!! url('assets/img/iniciar-sesion.png') !!}" alt="">
+                                        <img style="width: 40%; margin: 3%" class="" src="{!! url('assets/img/logo-refill.png') !!}" alt="">
                                     </div>
                                     <br>
                                     <form class="user" method="POST" action="{{ route('login') }}">
