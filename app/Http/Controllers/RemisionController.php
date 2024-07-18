@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CategoriaProducto;
+use App\Models\DetalleRemisiones;
 use App\Models\MovimientosCaja;
+use App\Models\Productos;
+use App\Models\Remisiones;
 use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +26,10 @@ class RemisionController extends Controller
     if(auth()->user()->rol != 'ADMINISTRATIVO'){
       return redirect('inicio');
     }
-    return view('modulos.remisiones.index');
+
+    $categoriasProducto = CategoriaProducto::all();
+
+    return view('modulos.remisiones.index' ,compact('categoriasProducto'));
   }
   public function autocompleteDocumento(Request  $request)
   {
@@ -31,7 +38,7 @@ class RemisionController extends Controller
     try {
 
       $term = $request->get('term');
-      $productos = Producto::where('nombre', 'LIKE', '%' . $term . '%')->get();
+      $productos = Productos::where('nombre', 'LIKE', '%' . $term . '%')->get();
       
       $result = [];
       foreach ($productos as $producto) {
@@ -46,100 +53,60 @@ class RemisionController extends Controller
     return response()->json($result);
   }
 
-  public function getDataMovimientos(Request $request)
-  {
-    $response = ["status" => true, "message" => "consultado correctamente", "data" => []];
+  public function guardarRemision(Request $request){
+
+    $response = [
+      'success' => true,
+      'message' => 'Se guardo correctamente',
+      'data' => []
+    ];
 
     try {
 
-      $fechaInicio = $request->get('fechaInicial') . ' 00:00:00';
-      $fechaFin = $request->get('fechaFinal') . ' 23:59:59';
-      $fechaString = $request->get('fechaInicial') . ' a ' . $request->get('fechaFinal');
+      DB::beginTransaction();
 
-      // Convertir las fechas a objetos DateTime
-      $fechaInicial = new DateTime($request->get('fechaInicial'));
-      $fechaFinal = new DateTime($request->get('fechaFinal'));
+      $productoArray = $request->get('productos');      
+      $idCliente = $request->get('cliente');
+      $precioTotal = (int) $request->get('productos');
 
-
-      setlocale(LC_TIME, 'es_ES.UTF-8');
-      $fechaInicialFormateada = strftime('%d de %B del %Y', $fechaInicial->getTimestamp());
-      $fechaFinalFormateada = strftime('%d de %B del %Y', $fechaFinal->getTimestamp());
-
-      $fechaString = $fechaInicialFormateada . ' al ' . $fechaFinalFormateada;
-
-
-      $valores = MovimientosCaja::selectRaw('
-      SUM(CASE WHEN tipo = "ingreso" THEN valor ELSE 0 END) AS ingreso,
-      SUM(CASE WHEN tipo = "salida" THEN valor ELSE 0 END) AS egreso')
-        ->whereBetween('created_at', [$fechaInicio, $fechaFin])
-        ->get();
-
-      $totalValoresBusq = MovimientosCaja::selectRaw('
-      SUM(CASE WHEN metodo_pago = "efectivo" THEN valor ELSE 0 END) AS efectivo,
-      SUM(CASE WHEN metodo_pago = "transferencia" THEN valor ELSE 0 END) AS transferencia')
-        ->whereBetween('created_at', [$fechaInicio, $fechaFin])
-        ->get();
-
-      $totalValoresBusqueda = MovimientosCaja::selectRaw('
-      SUM(CASE WHEN metodo_pago = "efectivo" AND tipo = "ingreso" THEN valor
-               WHEN metodo_pago = "efectivo" AND tipo = "salida" THEN -valor
-               ELSE 0 END) AS efectivo,
-      SUM(CASE WHEN metodo_pago = "transferencia" AND tipo = "ingreso" THEN valor
-               WHEN metodo_pago = "transferencia" AND tipo = "salida" THEN -valor
-               ELSE 0 END) AS transferencia')
-        ->whereBetween('created_at', [$fechaInicio, $fechaFin])
-        ->first();
-
-
-      $totalValoresHistorico = MovimientosCaja::selectRaw('
-      SUM(CASE WHEN metodo_pago = "efectivo" AND tipo = "ingreso" THEN valor
-               WHEN metodo_pago = "efectivo" AND tipo = "salida" THEN -valor
-               ELSE 0 END) AS efectivo,
-      SUM(CASE WHEN metodo_pago = "transferencia" AND tipo = "ingreso" THEN valor
-               WHEN metodo_pago = "transferencia" AND tipo = "salida" THEN -valor
-               ELSE 0 END) AS transferencia')
-        ->first();
-
-    $totalBusqueda= $totalValoresBusqueda->efectivo + $totalValoresBusqueda->transferencia;
-    $totalHistoricofin = $totalValoresHistorico->efectivo + $totalValoresHistorico->transferencia;
-      $valoresTotales = [
-        "efectivoBusqueda" => number_format($totalValoresBusqueda->efectivo, 0, ',', '.'),
-        "transferenciaBusqueda" => number_format($totalValoresBusqueda->transferencia, 0, ',', '.'),
-        "efectivoHistorico" => number_format($totalValoresHistorico->efectivo, 0, ',', '.'),
-        "transferenciaHistorico" => number_format($totalValoresHistorico->transferencia, 0, ',', '.'),
-        "totalBusqueda" => number_format($totalBusqueda, 0, ',', '.'),
-        "totalHistorico" => number_format($totalHistoricofin, 0, ',', '.'),
-
+      $dataRemision = [
+        "fecha" => now(),
+        "total" => $precioTotal,
+        "cliente_id" => $idCliente,
+        "usuario_creacion" => auth()->user()->id
       ];
 
+      $remision = Remisiones::create($dataRemision);
 
-      // Calcular el total
-      $total = $valores->sum('ingreso') - $valores->sum('egreso');
+      $idRemision =  $remision->id;
+      foreach ($productoArray as $key => $value) {
 
-      // Formatear los valores a moneda
-      $valores->transform(function ($item, $key) {
-        $item->ingreso = number_format($item->ingreso, 0, ',', '.');
-        $item->egreso = number_format($item->egreso, 0, ',', '.');
-        return $item;
-      });
+        $dataDetalleRemision = [
+          'remision_id' => $idRemision,
+          'producto_id' => $value['id'],
+          'cantidad'  => $value['cantidad'],
+          'precio_unitario'  => $value['precio'],
+          'subtotal'  => $value['subtotal']
+        ];
 
-      // Formatear el total a moneda
-      $total = number_format($total, 2, ',', '.');
+        DetalleRemisiones::create($dataDetalleRemision);
+      }
+      
+      DB::commit();
 
-      $dataMovimiento = MovimientosCaja::whereBetween('created_at', [$fechaInicio, $fechaFin])
-        ->get();
-
-      $response['data'] = $dataMovimiento;
-      $response['ingreso'] = $valores[0]->ingreso;
-      $response['egreso'] = $valores[0]->egreso;
-      $response['total'] = $total;
-      $response['valoresTotales'] = $valoresTotales;
-      $response['fechas'] = $fechaString;
 
     } catch (\Exception $e) {
-      $response = ["status" => false, "message" => "Ocurrio un error al consultar", "error" => $e->getMessage()];
+      DB::rollBack();
+      dd($e);
+      $response = [
+        'success' => false,
+        'message' => $e->getMessage(),
+        'error' => $e
+      ];
     }
 
-    return $response;
+    return response()->json($response);
+
   }
+
 }

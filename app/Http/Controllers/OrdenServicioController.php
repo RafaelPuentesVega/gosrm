@@ -318,7 +318,12 @@ class OrdenServicioController extends Controller
         }
         //Consulta para traer los repuestos de la orden
         $repuesto = DB::table('repuesto')
-        ->where('id_orden_servicio_repuesto', '=', $id_cliente)->get()->toArray();
+        ->where('id_orden_servicio_repuesto', '=', $id_cliente)->get()->toArray(); 
+
+        $pendAutRep = DB::table('repuesto')
+        ->where('id_orden_servicio_repuesto', '=', $id_cliente)
+        ->where('estado_repuesto' , '1')
+        ->count();
         //Realizamos el conteo del valor total de los repuestos
         $totalValorRepuestos = 0;//Iniciliazamos la variable en 0
         $control = sizeOf($repuesto) ;
@@ -356,7 +361,7 @@ class OrdenServicioController extends Controller
     }
         return view('modulos.ordenServicio.verOrdenGeneral')->with('arrayData',$arrayData)
         ->with('diagnostico',$diagnostico)->with('Arraydiagnostico',$Arraydiagnostico)
-        ->with('anotacion',$anotacion)->with('repuesto',$repuesto)->with('totalValorRepuestos',$totalValorRepuestos);
+        ->with('anotacion',$anotacion)->with('pendAutRep',$pendAutRep)->with('repuesto',$repuesto)->with('totalValorRepuestos',$totalValorRepuestos);
 
     }
 
@@ -842,6 +847,29 @@ public function cambiarEstadoOrden(Request $request)
     return json_encode($response);
 }
 
+public function enviarBodega(Request $request)
+{
+    try {
+        $stateBodega = 4;
+        $response = array('state' => 'save' ,  'message' => 'Guardado Correctamente');
+        $ordenServicio =  OrdenServicio::where('id_orden',$request->idOrden)->first();
+        if($ordenServicio->estadoOrden == $stateBodega){
+            $response['state'] = 'error';
+            $response['message'] = 'Ya el equipo se encuentra en bodega';
+        }else{
+            DB::table('orden_servicio')
+            ->where('id_orden', $request->idOrden)
+            ->update( [
+                'estadoOrden' => $stateBodega ,
+                'fecha_entrega_orden' => null 
+                ] );
+        }
+    } catch (\Throwable $e) {
+        $response['state'] = 'error';
+        $response['message'] = 'Ocurrio un error '.$e;
+    }
+    return json_encode($response);
+}
 public function editarReporteTecnico(Request $request)
 {
     $idOrden = $request->idOrden;

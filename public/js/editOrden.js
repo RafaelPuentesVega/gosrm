@@ -299,69 +299,77 @@ function guardarRepuesto() {
     });
 
 }
-    function terminarOrden() {
-        btnguardar = document.getElementById('btnAnotacion');
+function terminarOrden(redirect = true) {
+    showpreloader();
+    return new Promise((resolve, reject) => {
+        let btnguardar = document.getElementById('btnAnotacion');
         let reporteTecnico = $("#reporteTecnico").val();
         let idOrden = $("#idOrden").val();
         let valorservicio = $("#valorservicio").val();
         let valorTotalRepuesto = $('#totalValorRepuestos').val();
         let repuesto = $("#descripcionRepuesto").val();
         let cantidad = $("#cantidadRepuesto").val();
-        if(repuesto.length >= 1 || cantidad.length >= 1){
-            Swal.fire({
-                icon: 'question',
-                title:'¡Repuesto!',
-                html: '<b><i> Tiene 1 repuesto pendiente de registrar. <br> Primero Guardar el repuesto.</i></b> ',
-              })
-              return true;
+
+        // Verificar si los elementos existen
+        if (typeof repuesto !== 'undefined' && typeof cantidad !== 'undefined') {
+            if (repuesto.length >= 1 || cantidad.length >= 1) {
+                Swal.fire({
+                    icon: 'question',
+                    title: '¡Repuesto!',
+                    html: '<b><i> Tiene 1 repuesto pendiente de registrar. <br> Primero Guardar el repuesto.</i></b>',
+                });
+                reject(); // Rechazamos la promesa debido a la advertencia.
+                return;
+            }
         }
 
-
-        if (reporteTecnico.length < 1) {
-            toastr["warning"]("<h6>Diligenciar Reporte Tecnico </h6>")
+        if (typeof reporteTecnico === 'undefined' || reporteTecnico.length < 1) {
+            toastr["warning"]("<h6>Diligenciar Reporte Tecnico </h6>");
             $("#reporteTecnico").focus();
+            reject(); // Rechazamos la promesa debido a la advertencia.
             return;
         }
-        if (valorservicio.length < 1) {
-            toastr["warning"]("<h6>Diligenciar el Valor del servicio </h6>")
+        if (typeof valorservicio === 'undefined' || valorservicio.length < 1) {
+            toastr["warning"]("<h6>Diligenciar el Valor del servicio </h6>");
             $("#valorservicio").focus();
+            reject(); // Rechazamos la promesa debido a la advertencia.
             return;
         }
-        if (document.getElementById('checkSinIva').checked) {
-            iva = 'NO';
-        }else{
-            iva = 'SI' ;
-        }
+
+        let iva = document.getElementById('checkSinIva').checked ? 'NO' : 'SI';
         valorservicio = parseInt(valorservicio.replace(/,/g, ""));
-        hidepreloader()
+        hidepreloader();
+
         $.ajax({
             url: '../termirnarOrden',
             data: {
                 reporteTecnico: reporteTecnico,
-                idOrden : idOrden,
-                valorservicio : valorservicio,
-                valorTotalRepuesto : valorTotalRepuesto,
-                iva : iva
+                idOrden: idOrden,
+                valorservicio: valorservicio,
+                valorTotalRepuesto: valorTotalRepuesto,
+                iva: iva
             },
             type: 'POST',
             dataType: 'json',
             success: function (json) {
                 if (json.mensaje === "save") {
-
                     btnguardar.disabled = true;
-                    setTimeout( toastr["success"]("<h6>Se registro correctamente</h6>", "GUARDADO"), 20000)
-                    window.location.href = '../inicio';
-                    // window.open('http://localhost/plataforma/public/OrdenEntrada/'+id);
+                    setTimeout(toastr["success"]("<h6>Se registro correctamente</h6>", "GUARDADO"), 20000);
+                    if (redirect) {
+                        window.location.href = '../inicio';
                     }
+                }
+                resolve(); // Resolvemos la promesa al finalizar el éxito.
             },
             error: function (xhr, status) {
                 alert('Disculpe, existió un problema en el servidor - Recargue la Pagina');
-            },
-            complete: function (xhr, status) {
+                reject(); // Rechazamos la promesa en caso de error.
             }
         });
-
+    });
 }
+
+
 $(function () {
     $('[data-toggle="tooltip"]').tooltip()
 

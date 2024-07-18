@@ -320,12 +320,10 @@
                                                 <br>
                                                 <div class="col-md-13">
                                                     <div class="form-group">
-                                                        <textarea rows="4" id="editReporte" class="form-control" maxlength="1500" placeholder="" autocomplete="off" style="display: none ; text-transform: uppercase" onKeyUp="document.getElementById(this.id).value=document.getElementById(this.id).value.toUpperCase()" >{{ $arrayData->reporte_tecnico_orden }}</textarea>
+                                                        <textarea rows="4" id="reporteTecnico" class="form-control" maxlength="1500" placeholder="" autocomplete="off" style="text-transform: uppercase" onKeyUp="document.getElementById(this.id).value=document.getElementById(this.id).value.toUpperCase()" >{{ $arrayData->reporte_tecnico_orden }}</textarea>
                                                     </div>
-                                                </div>
+                                                </div>      
                                                 <div id="reporteTecnicoDiv">
-                                                    {{ $arrayData->reporte_tecnico_orden }}
-
                                                 </div>
                                                 <br><br>
                                                 <div style="text-align: right; margin-bottom: -20px"><label><strong>TECNICO: </strong></label>{{$arrayData->name}}
@@ -362,9 +360,13 @@
                                                     <span
                                                         class="badge badge-pill badge-primary">Entregada</span>
                                                     {{-- {{-- ORDEN ENTREGADA --}}
+                                                @elseif($arrayData->estadoOrden == 4)
+                                                    <span
+                                                        class="badge badge-pill " style="    background-color: #7057A2!important">Bodega</span>
+                                                    {{-- {{-- ORDEN EN BODEGA --}}
                                                 @endif
 
-                                                @if($arrayData->estadoOrden > 1 &&  auth()->user()->rol == "ADMINISTRATIVO")
+                                                @if($arrayData->estadoOrden > 1 &&  $arrayData->estadoOrden != 4 && auth()->user()->rol == "ADMINISTRATIVO")
                                                 <button id="btncambiarEstado" title="Cambiar Estado Orden" data-toggle="tooltip" class="btn style"><i style="font-size: 16px" class="fas fa-undo"></i></button>
                                                 @endif
                                             </div>
@@ -548,93 +550,172 @@
                                                 @endforeach
                                             @endif
 
+                                            <tr style=" font-size: 13px " id="repuestoIngresado" hidden>
+                                                <th id="cantidadRpuestoTr" width=""
+                                                    style="font-size: 16px ;font-weight:normal;  text-align: center; border: rgba(0, 0, 0, 0.089) 1.5px solid">
+                                                </th>
+                                                <th width=""
+                                                    style="font-size: 16px ;font-weight:normal;  text-align: center; border: rgba(0, 0, 0, 0.089) 1.5px solid">
+                                                </th>
+                                                <th width=""
+                                                    style="font-size: 16px ;font-weight:normal;  text-align: center; border: rgba(0, 0, 0, 0.089) 1.5px solid">
+                                                </th>
+                                                <th width=""
+                                                    style="font-size: 16px ;font-weight:normal;  text-align: center; border: rgba(0, 0, 0, 0.089) 1.5px solid">
+                                                </th>
+                                            </tr>
+                                            @if ($arrayData->estadoOrden == 1)
+                                                <tr id="TragregarRepuesto">
+                                                    <th style="border: rgba(0, 0, 0, 0.089) 1.5px solid;cursor: pointer;"
+                                                        class="text-center" colspan="3">
+                                                        <div id="agregarRepuesto" style="color: #a5a5a5">+ Agregar
+                                                            repuesto
+                                                        </div>
+                                                    </th>
+                                                    <th width="" colspan="2"
+                                                        style="font-size: 13px ;font-weight:normal;  text-align: left; border: rgba(0, 0, 0, 0.089) 1.5px solid">
+                                                        &nbsp;<strong></strong>
+                                                    </th>
+    
+                                                </tr>
+    
+                                                <tr hidden id="divAgregarRepuesto" style=" font-size: 13px ">
+                                                    <th
+                                                        style=" height: 1px; font-weight:normal; text-align: center ; border: rgba(0, 0, 0, 0.123) 1px solid">
+                                                        <button style="" title="Agregar Repuesto"
+                                                            data-toggle="tooltip" data-placement="bottom"
+                                                            onclick="guardarRepuesto()" title="Agregar" type="button"
+                                                            class="btn btn-warning btn-fill " id="btnAgregarRepuesto">
+                                                            <i style="color: #ffffff; font-size: 20px; margin: -2px; width: 17px; height: 20px"
+                                                                class="fas fa-tools box-info pull"></i>
+                                                        </button>
+                                                    </th>
+                                                    <th width=""
+                                                        style=" height: 1px; font-weight:normal; text-align: left ; border: rgba(0, 0, 0, 0.123) 1px solid">
+                                                        <input style="" type="number"
+                                                            class="form-control pull-right" name="cantidadRepuesto"
+                                                            id="cantidadRepuesto" placeholder="#" autocomplete="off">
+                                                    </th>
+                                                    <th width=""
+                                                        style="font-weight:normal;text-align: left; border: rgba(0, 0, 0, 0.185) 1px solid">
+                                                        <input style="margin-top: 0% " type="text"
+                                                            class="form-control pull-right" name="descripcionRepuesto"
+                                                            id="descripcionRepuesto" placeholder="Nombre Repuesto"
+                                                            autocomplete="off"
+                                                            onKeyUp="document.getElementById(this.id).value=document.getElementById(this.id).value.toUpperCase()">
+                                                    </th>
+                                                    <th width="" colspan="2"
+                                                        style="font-size: 13px ;font-weight:normal;  text-align: left; border: rgba(0, 0, 0, 0.089) 1.5px solid">
+                                                        &nbsp;<strong></strong>
+                                                    </th>
+                                                </tr>
+                                            @endif
                                             <tr style=" font-size: 13px;text-align: center ">
                                                 <th width="" colspan="2"
                                                     style=" height: 1px; font-weight:normal; text-align: left ; border: rgba(0, 0, 0, 0) 1px solid">
-                                                </th>
-                                                <th width=""
-                                                    style="font-weight:normal;text-align: left; ; border: rgba(0, 0, 0, 0) 1px solid">
-                                                 </th>
-                                                <th width=""
-                                                    style=" background: #e0e0e0;font-size: 13px ;font-weight:normal;  text-align: left; border: rgba(0, 0, 0, 0) 2px solid">
-                                                    &nbsp;<strong style=" text-align: center">Subtotal</strong>
-                                                </th>
-                                                <th width=""
-                                                    style="background: #e0e0e0; font-size: 13px ;font-weight:normal;  text-align: right; border: rgba(0, 0, 0, 0) 2px solid">
-                                                    &nbsp;<strong>${{number_format($totalValorRepuestos, 0, ',', '.')}}</strong>
-                                                </th>
-
-                                            </tr>
-
-                                            <tr style=" font-size: 13px ">
-                                                <th width="" colspan="2"
-                                                    style=" height: 1px; font-weight:normal; text-align: left ; border: rgba(0, 0, 0, 0) 1.5px solid">
                                                     &nbsp;<strong> </strong>
                                                 </th>
                                                 <th width=""
-                                                    style="font-weight:normal;text-align: left ; border: rgba(0, 0, 0, 0) 1.5px solid">
+                                                    style="font-weight:normal;text-align: left; border:  rgba(0, 0, 0, 0) 1px solid 1px solid">
+                                                    &nbsp; <strong>
+                                                        <div id="suggestionsRepuesto"></div>
+                                                    </strong>
+                                                </th>
+                                                <th width=""
+                                                    style=" background: #e0e0e0;font-size: 13px ;font-weight:normal;  text-align: left; border: rgba(0, 0, 0, 0.089) 1.5px solid">
+                                                    &nbsp;<strong style="text-align: center">Subtotal</strong>
+                                                </th>
+                                                <th width=""
+                                                    style="font-size: 13px ;font-weight:normal;  text-align: right; border: rgba(0, 0, 0, 0.089) 1.5px solid">
+                                                    <strong>${{ number_format($totalValorRepuestos, 0, ',', '.') }}
+                                                    </strong>
+                                                </th>
+    
+                                            </tr>
+    
+                                            <tr style=" font-size: 13px ">
+                                                <th width="" colspan="2"
+                                                    style=" height: 1px; font-weight:normal; text-align: left ; border: rgba(0, 0, 0, 0) 1px solid">
+                                                    &nbsp;<strong> </strong>
+                                                </th>
+                                                <th width=""
+                                                    style="font-weight:normal;text-align: left; border: rgba(0, 0, 0, 0) 1px solid">
                                                     &nbsp; <strong>
                                                     </strong> </th>
                                                 <th width=""
-                                                    style="background: #e0e0e0; font-size: 13px ;font-weight:normal;  text-align: left; border: rgba(0, 0, 0, 0) 2px solid">
+                                                    style="background: #e0e0e0;font-size: 13px ;font-weight:normal;  text-align: left; border: rgba(0, 0, 0, 0.089) 1.5px solid">
                                                     &nbsp;<strong>Valor Servicio</strong>
                                                 </th>
                                                 <th width=""
-                                                    style="background: #e0e0e0; font-size: 13px ;font-weight:normal;  text-align: right; border: rgba(0, 0, 0, 0) 2px solid">
-                                                    <strong id="labelValorServicio">${{number_format($arrayData->valor_servicio_orden, 0, ',', '.')}}</strong>
-
-                                                    <input style=" font-weight:bold ;display: none; margin-top: -1%;text-align: right; " type="text"
-                                                        class="form-control number" name="valorservicio" id="valorservicio" value="{{$arrayData->valor_servicio_orden}}"
-                                                        placeholder="" autocomplete="off" >
-                                                </th>
-
-                                            </tr>
-
-                                            <tr style=" font-size: 13px ">
-                                                <th width="" colspan="2"
-                                                    style=" height: 1px; font-weight:normal; text-align: left ; border: rgba(0, 0, 0, 0) 1px solid"></th>
-                                                <th width=""
-                                                    style="font-weight:normal;text-align: right; border: rgba(0, 0, 0, 0) 1px solid">
-                                                 </th>
-                                                <th width=""
-                                                    style=" background: #e0e0e0; font-size: 13px ;font-weight:normal;  text-align: left; border: rgba(0, 0, 0, 0) 2px solid">
-                                                    &nbsp;<strong style=" line-height: 30px">IVA 19%</strong>
-                                                    {{-- <select class="js-example-basic js-states form-control" id="verificacion_funcionamiento" style="float: right; width: 40%" >
-                                                        {{-- <option value="" >Seleccione..</option>
-                                                        <option value="SI">SI</option>
-                                                        <option value="NO" >NO</option>
-                                                    </select> --}}
-                                                    @if($arrayData->estadoOrden == 2 && $arrayData->iva_orden == 0)
-                                                    <input checked disabled style="width: 20px; height: 20px; border-radius: 1em" title="SIN IVA" data-toggle="tooltip" data-placement="top"  class="form-check-input" type="checkbox" value="" id="checkSinIva"  autocomplete="off" onchange="calcularValores()">
-                                                    @elseif($arrayData->estadoOrden == 2)
-                                                    <input style="width: 20px; height: 20px; border-radius: 1em" title="SIN IVA" data-toggle="tooltip" data-placement="top"  class="form-check-input" type="checkbox" value="" id="checkSinIva"  autocomplete="off" onchange="calcularValores()">
+                                                    style="font-size: 13px ;font-weight:normal;  text-align: right; border: rgba(0, 0, 0, 0.089) 1.5px solid">
+                                                    &nbsp;
+                                                    @if ($arrayData->estadoOrden != 3 )
+                                                        <input hidden value="{{ $arrayData->valor_servicio_orden }}"
+                                                            style="color: black;font-weight:bold ;margin-top: -10%;text-align: right; "
+                                                            type="text" class="form-control number"
+                                                            name="valorservicio" id="valorservicio" placeholder=""
+                                                            autocomplete="off">
+                                                    @else
+                                                        <strong>
+                                                            <div class=""
+                                                                style="font-size: 14px;color: black;text-align: right"
+                                                                id="labelValorServicio">$
+                                                                {{ number_format($arrayData->valor_servicio_orden, 0, ',', '.') }}
+                                                            </div>
+                                                        </strong>
                                                     @endif
+    
                                                 </th>
-                                                <th width=""
-                                                    style="background: #e0e0e0; font-size: 13px ;font-weight:normal;  text-align: left; border: rgba(0, 0, 0, 0) 2px solid"><strong><div class="" style="text-align: right ; margin: 0%" id="iva">${{number_format($arrayData->iva_orden, 0, ',', '.')}}</div></strong>
-                                                </th>
-
+    
                                             </tr>
-
+    
                                             <tr style=" font-size: 13px ">
                                                 <th width="" colspan="2"
-                                                    style=" height: 1px; font-weight:normal; text-align: left ; border: rgba(0, 0, 0, 0) 1.5px solid">
+                                                    style=" height: 1px; font-weight:normal; text-align: left ; border: rgba(0, 0, 0, 0) 1px solid">
                                                     &nbsp;<strong> </strong>
                                                 </th>
                                                 <th width=""
-                                                    style="font-weight:normal;text-align: left ; border: rgba(0, 0, 0, 0) 1.5px solid">
+                                                    style="font-weight:normal;text-align: left; border: rgba(0, 0, 0, 0) 1px solid">
                                                     &nbsp; <strong>
+                                                    </strong></th>
+                                                <th width=""
+                                                    style="background: #e0e0e0;font-size: 13px ;font-weight:normal;  text-align: left; border: rgba(0, 0, 0, 0.089) 1.5px solid">
+                                                    &nbsp; <strong>IVA 19%</strong>
+                                                    <input
+                                                        style="width: 20px; height: 20px; border-radius: 1em; margin: 0%"
+                                                        title="SIN IVA" data-toggle="tooltip" data-placement="top"
+                                                        class="form-check-input" type="checkbox" value=""
+                                                        id="checkSinIva" autocomplete="off" onchange="calcularValores()">
+    
+                                                </th>
+                                                <th width=""
+                                                    style="font-size: 14px ;font-weight:normal;  text-align: left; border: rgba(0, 0, 0, 0.089) 1.5px solid"><strong>
+                                                        <div class="" style="color: black;text-align: right"
+                                                            id="iva">${{ number_format($arrayData->iva_orden, 0, ',', '.') }} </div>
+                                                    </strong>
+                                                </th>
+    
+                                            </tr>
+    
+                                            <tr style=" font-size: 13px ">
+                                                <th width="" colspan="2"
+                                                    style=" height: 1px; font-weight:normal; text-align: left ">
+                                                    &nbsp;<strong> </strong>
+                                                </th>
+                                                <th width="" style="font-weight:normal;text-align: left"> <strong>
                                                     </strong> </th>
                                                 <th width=""
-                                                    style="background: #e0e0e0; font-size: 13px ;font-weight:normal;  text-align: left; border: rgba(0, 0, 0, 0) 2px solid">
+                                                    style="background: #e0e0e0;font-size: 13px ;font-weight:normal;  text-align: left; border: rgba(0, 0, 0, 0.089) 1.5px solid">
                                                     &nbsp;<strong>Total</strong>
                                                 </th>
                                                 <th width="" id="valorTotalOrden"
-                                                style="background: #e0e0e0; font-size: 13px ;font-weight:normal;  text-align: right; border: rgba(0, 0, 0, 0) 2px solid">
-                                                <strong><div style="text-align: right " id="valorTotalOrde">${{number_format($arrayData->valor_total_orden, 0, ',', '.')}}</div></strong>
+                                                    style="color: black; font-size: 14px ;font-weight:normal;  text-align: right; border: rgba(0, 0, 0, 0) 1.5px solid">
+                                                    <strong>
+                                                        <div style="text-align: right " id="valorTotalOrde">${{ number_format($arrayData->valor_total_orden, 0, ',', '.') }}</div>
+                                                    </strong>
                                                 </th>
-
                                             </tr>
+    
                                             @if($arrayData->estadoOrden == 3)
                                             <tr style=" font-size: 13px ">
                                                 <th width="" colspan="2"
@@ -686,21 +767,42 @@
                                                 @endif
                                             </div>
                                         </div>
-                                        <div class="col-md-5">
-
+                                        <div class="col-md-2">
+                                   
+                                        </div>
+                                        <div class="col-md-3 ">
+                                            <div class="form-group">
+                                                <br>
+                                                @if($arrayData->estadoOrden == 1 || $arrayData->estadoOrden == 2)
+                                                    <input type="button" style="margin: 5px;padding: 9px 15px;background-color: #4c2d8b ; color: #ffffff" class="btn pull-right align-items-end" id="btnEnviarBodega"
+                                                     value= "ENVIAR A BODEGA">
+                                        
+                                                @endif 
+                                                
+                                            </div>  
                                         </div>
                                         <div class="col-md-3">
                                             <div class="form-group">
                                                 <br>
                                                 @if($arrayData->estadoOrden == 2)
-                                                    <input type="button" style="margin: 5px;padding: 9px 15px;" class="btn btn-success pull-right" id="btnTerminarOrden"
+                                                    <input type="button" style="margin: 5px;padding: 9px 15px;" class="btn btn-success pull-right" id="btnEntregarOrden"
                                                         @foreach ($repuesto as $repuestos)
                                                                 @if($repuestos->estado_repuesto == 1)
                                                                     disabled  title="PENDIENTE DE AUTORIZAR REPUESTO"
                                                                 @endif
                                                         @endforeach
                                                     onclick="entregarOrden(event)"  value= "ENTREGAR EQUIPO">
-                                                @endif
+                                                @elseif($arrayData->estadoOrden == 1 || $arrayData->estadoOrden == 4)
+                                                    
+                                                    <input type="button" style="margin: 5px;padding: 9px 15px;" class="btn btn-success pull-right" id="btnTerminarEntregarOrden"
+                                                    @if ($pendAutRep > 0)
+                                                        onclick="alertPendRepuesto()"
+                                                    @else
+                                                        onclick="terminaryEntregarOrden()"
+                                                    @endif
+                                                     value= "TERMINAR Y ENTREGAR EQUIPO">
+                                        
+                                                @endif 
 
                                             </div>
                                         </div>
@@ -722,6 +824,7 @@
 @include('modulos.ordenServicio.modal.mdlAgregarNumeroFactura')
 @include('modulos.ordenServicio.modal.mldCambiarEstadoOrden')
 @include('modulos.ordenServicio.modal.mdlCambiarTecnico')
+@include('modulos.ordenServicio.modal.mldEnviarBodega')
 @section('js')
     <script src="{!! url('js/jquery.min.js') !!}"></script>
     <script src="{!! url('assets/js/toastr.min.js') !!}"></script>

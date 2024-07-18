@@ -128,6 +128,8 @@
                         @break
                     @case(3)
                     <td >Entregada</td>
+                    @case(4)
+                    <td >Bodega</td>
                     @break
                     @default
                     <td>Desconocido</td>

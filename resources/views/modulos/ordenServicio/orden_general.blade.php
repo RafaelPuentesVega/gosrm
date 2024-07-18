@@ -469,7 +469,7 @@
                                                 <strong>${{ number_format($OrdenServicio->valor_total_orden, 0, ',', '.') }}</strong>
                                             </th>
 
-                                            @if ($OrdenServicio->factura_numero_orden || $OrdenServicio->estadoOrden < 3)
+                                            @if ($OrdenServicio->factura_numero_orden || $OrdenServicio->estadoOrden != 3)
                                                 <th class="text-center" width="6%"
                                                     onclick="window.location.href='ordenGeneral/{{ encrypt($OrdenServicio->id_orden) }}'"
                                                     style="font-size: 13px ; font-weight:normal;text-align: left">
@@ -508,6 +508,10 @@
                                                     <span style="float: left;"
                                                         class="badge badge-pill badge-primary">Entregada</span>
                                                     {{-- {{-- ORDEN ENTREGADA --}}
+                                                @elseif($OrdenServicio->estadoOrden == 4)
+                                                <spa
+                                                    class="badge badge-pill" style="float: left; background-color: #7057A2 !important">Bodega</span>
+                                                    {{-- {{-- ORDEN EN BODEGA --}}
                                                 @endif
                                             </th>
 

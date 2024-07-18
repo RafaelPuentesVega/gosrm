@@ -1,8 +1,6 @@
 
 
 function entregarOrden(event) {
-    event.preventDefault();
-
     let idOrden = $("#idOrden").val();
     checkSinIva = document.getElementById('checkSinIva');
     enviarEmail = '';
@@ -30,6 +28,7 @@ function entregarOrden(event) {
 
       }).then((result) => {
         if (result.isConfirmed) {
+              showpreloader();
             let timerInterval
             Swal.fire({
               title: 'Enviado Correo!',
@@ -76,11 +75,13 @@ function entregarOrden(event) {
                     alert('Disculpe, existió un problema en el servidor - Recargue la Pagina');
                 },
                 complete: function (xhr, status) {
+                  hidepreloader();
                 }
             });
 
         } else if (result.dismiss === Swal.DismissReason.cancel
         ) {
+            showpreloader();
             enviarEmail = 'NO';
             $.ajax({
                 url: '../entregarOrden',
@@ -107,6 +108,7 @@ function entregarOrden(event) {
                     alert('Disculpe, existió un problema en el servidor - Recargue la Pagina');
                 },
                 complete: function (xhr, status) {
+                  hidepreloader();
                 }
             });
 

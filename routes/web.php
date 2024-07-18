@@ -82,6 +82,7 @@ Route::post('updateNotificacion',[NotificacionesEmailController::class, 'update'
 Route::post('vencimientOrdenBuscar',[ParametroController::class, 'buscarVencimientOrden']);
 Route::post('updateDiasVencimiento',[ParametroController::class, 'updateDiasVencimiento']);
 Route::post('cambiarEstadoOrden',[OrdenServicioController::class, 'cambiarEstadoOrden']);
+Route::post('enviarBodega',[OrdenServicioController::class, 'enviarBodega']);
 Route::post('consultarTecnico',[OrdenServicioController::class, 'consultarTecnico']);
 Route::post('updateTecnico',[OrdenServicioController::class, 'updateTecnico']);
 Route::post('consultarCantOrden',[InicioController::class, 'graficoCantidadAno']);
@@ -152,9 +153,11 @@ Route::post('getDataMovimientos',[CajaController::class, 'getDataMovimientos']) 
 //Remisiones
 Route::get('remisiones',[RemisionController::class, 'index']) ->name('remisiones');
 Route::get('autocompletedocumento',[AutocompleteController::class, 'autocompleteDocumento']);
+Route::post('guardarRemision',[RemisionController::class, 'guardarRemision']);
 
 //cliente
 Route::get('getproductos',[ProductoController::class, 'getproductos']);
+Route::post('crearCliente',[ClientesController::class, 'crearClienteModal']);
 
 
 //producto

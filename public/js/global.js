@@ -60,10 +60,21 @@ function validarCamposObligatorios(formulario) {
 
     return isValid;
 }
+function validarCorreo(correo) {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(correo);
+}
+
 function formatoPrecio(input) {
     let valor = input.value.replace(/\D/g, ""); 
     valor = Number(valor).toLocaleString('es-ES');
     input.value = valor;
+}
+
+function formatoPreciovalorNumero(valor) {
+
+    valor = Number(valor).toLocaleString('es-ES');
+    return  valor;
 }
 
 $('#changePasswordBtn').click(function() {

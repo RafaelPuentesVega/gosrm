@@ -697,7 +697,7 @@
 
                                     @if ($arrayData->estadoOrden == 1)
                                         <br><br> <button class="btn btn-success btn-fill pull-right"
-                                            @if ($diagnostico != 1) id="btnPendDiag" title="PENDIENTE DE DIAGNOSTICO"
+                                    @if ($diagnostico != 1) id="btnPendDiag" title="PENDIENTE DE DIAGNOSTICO"
                                     @elseif($pendAutRep >= 1)
                                     id="btnPendRep" title="PENDIENTE DE AUTORIZAR" data-value={{ $pendAutRep }}
                                     @else

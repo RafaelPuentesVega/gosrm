@@ -39,8 +39,9 @@ class ProductoController extends Controller
       'data' => []
     ];
     try {
-        $productos = Productos::select('productos.*', DB::raw(CategoriaProducto::getTableName().'.nombre AS nombre_categoria'))
+        $productos = Productos::select(Productos::getTableName().'.*', DB::raw(CategoriaProducto::getTableName().'.nombre AS nombre_categoria'))
         ->join(CategoriaProducto::getTableName() , CategoriaProducto::getTableName().'.id' ,Productos::getTableName().'.id_categoria' )
+        ->orderBy(Productos::getTableName().'.id', 'DESC')
         ->get();
 
         $response['data'] = $productos;
@@ -119,8 +120,8 @@ class ProductoController extends Controller
         }
       }
 
-      Productos::create($dataRequest);
-      
+      $producto = Productos::create($dataRequest);
+      $response['data'] =$producto;
     } catch (\Exception $e) {
       $response = [
         'success' => false,

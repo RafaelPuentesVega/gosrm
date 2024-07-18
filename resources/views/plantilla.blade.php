@@ -58,7 +58,7 @@
             <script src="{!! url('dist/js/adminlte.min.js') !!}"></script>
             @yield('js')
            <script src="{!! url('assets/js/light-bootstrap-dashboard.js?v=1.4.0') !!}"></script>
-            <script src="{!! url('assets/js/demo.js') !!}"></script>
+            {{-- <script src="{!! url('assets/js/demo.js') !!}"></script> --}}
             <script src="{!! url('js/preloader.js?v=1.3') !!}"></script>
             <script src="{!! url('js/global.js') !!}"></script>
             <script src="{!! url('assets/js/bootstrap.min.js" type="text/javascript') !!}"></script>

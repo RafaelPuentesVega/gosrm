@@ -1,6 +1,7 @@
 
 var productosArray = [];
-
+var clienteId = '';
+var productoId = '';
 $(document).ready(function() {
 
 
@@ -10,6 +11,23 @@ $(document).ready(function() {
         $('#modalBuscarProducto').modal('show');
     });
 
+    //abrir modal crear cliente
+    $('#btn-agregar-cliente').on('click', function() {
+        $('#modalBuscarCliente').modal('hide');
+        $('#modalCrearCliente').modal('show');
+    });
+
+
+    //abrir modal crear cliente
+    $('#btn-agregar-producto').on('click', function() {
+        $('#modalBuscarProducto').modal('hide');
+        $('#modalAgregarProducto').modal('show');
+    });
+
+    //guardar remision
+    $('#btn-guardar-remision').on('click', function() {
+        guardarRemision(event);
+    });
     //abrir modal cliente
     $('#btnAbrirBuscarCliente').on('click', function() {
         loadTableBuscarCliente()
@@ -26,6 +44,10 @@ $(document).ready(function() {
         if(documentoCliente.length > 4){
             completarCliente( '' , documentoCliente);
         }
+    });
+    //crear cliente
+    $('#btn-modal-crear-cliente').on('click', function() {
+        guardarClienteModal();
     });
 
     $("#documentoCliente").on("keydown", function(event) {
@@ -84,22 +106,29 @@ $(document).ready(function() {
 
         let nombreProducto = $('#remisionNombreProducto').val();
         let cantidadProducto = $('#remisionCantidadProducto').val();
-        let precioProducto = $('#remisionPrecioProducto').val();
-        let subtotalProducto = $('#remisionSubtotalProducto').val();
+        let precioProducto = $('#remisionPrecioProducto').val().replace(/,/g, '').replace(/\./g, '');
+        let subtotalProducto = $('#remisionSubtotalProducto').val().replace(/,/g, '').replace(/\./g, '');
+        let idProducto = $('#idProducto').val();
 
         if(nombreProducto && cantidadProducto && precioProducto) {
             let producto = {
                 nombre: nombreProducto,
                 cantidad: cantidadProducto,
                 precio: precioProducto,
-                subtotal: subtotalProducto
+                subtotal: subtotalProducto,
+                id : idProducto
             };
 
             productosArray.push(producto);
             actualizarTablaProductos();
             limpiarCamposProducto();
         } else {
-            alert('Por favor, complete todos los campos obligatorios.');
+            Swal.fire({
+                icon: 'warning',
+                text: 'Por favor, complete todos los campos obligatorios.',
+                timer: 1200,
+                showConfirmButton: false
+              })
         }
     });
 });
@@ -109,11 +138,14 @@ function limpiarCamposProducto() {
     $('#remisionCantidadProducto').val('');
     $('#remisionPrecioProducto').val('');
     $('#remisionSubtotalProducto').val('');
+    $('#idproducto').val('');
 }
 
 function actualizarTablaProductos() {
     let tabla = $('#tablaProductosAgregados tbody');
     tabla.empty();
+
+    let total = 0;
 
     productosArray.forEach((producto, index) => {
         tabla.append(`
@@ -121,14 +153,23 @@ function actualizarTablaProductos() {
                 <td>${index + 1}</td>
                 <td>${producto.nombre}</td>
                 <td>${producto.cantidad}</td>
-                <td>${producto.precio}</td>
-                <td>${producto.subtotal}</td>
+                <td>${formatoPreciovalorNumero(producto.precio)}</td>
+                <td>${formatoPreciovalorNumero(producto.subtotal)}</td>
                 <td>
                     <button class="btn btn-danger btn-sm" onclick="eliminarProducto(${index})">Eliminar</button>
                 </td>
             </tr>
         `);
+        total += parseInt(producto.subtotal);
     });
+
+    tabla.append(`
+        <tr>
+            <td colspan="4" class="text-right"><strong>Total:</strong></td>
+            <td><strong>${formatoPreciovalorNumero(total)}</strong></td>
+            <td></td>
+        </tr>
+    `);
 }
 
 function eliminarProducto(index) {
@@ -169,19 +210,24 @@ function completarCliente(id , documentoCliente = null){
                 $('#direccionCliente').val(cliente.cliente_direccion)
                 $('#celularCliente').val(cliente.cliente_celular)
                 $('#telefonoCliente').val(cliente.cliente_telefono)
+                clienteId = cliente.cliente_id;
+
             }else{
+                clienteId = '';
                 Swal.fire({
-                    icon: 'warning',
-                    title : 'Registrar Cliente',
-                    text: 'No se encontro registros con el numero de cedula digitado.',
-                    timer: 1200,
-                    showConfirmButton: false
-                  })
-                $('#nombreCliente').val('')
-                $('#correoCliente').val('')
-                $('#direccionCliente').val('')
-                $('#celularCliente').val('')
-                $('#telefonoCliente').val('')
+                title: "Desea crear nuevo cliente?",
+                text: 'No se encontro registros con el numero de cedula '+documentoCliente+' digitado.',
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Crear!"
+                }).then((result) => {
+                if (result.isConfirmed) {
+                    $('#modalCrearCliente').modal('show');
+                }
+                });
+                limpiardatosclienteRemision();
             }
 
         },error: function(error){
@@ -205,6 +251,7 @@ function completarProducto(id){
             if(producto){
                 let nombreProd = producto.nombre + ' - ' + producto.marca + ' - ' + producto.modelo
                 $('#remisionNombreProducto').val(nombreProd)
+                $('#idProducto').val(producto.id)
                 $("#remisionNombreProducto").prop('disabled', true);
                 $("#remisionCantidadProducto").prop('disabled', false);
                 $("#remisionPrecioProducto").prop('disabled', false);
@@ -326,4 +373,135 @@ function loadTableBuscarCliente(){
 function handleRowClickCliente(id){
     completarCliente(id , '')
     $('#modalBuscarCliente').modal('hide');
+}
+
+function guardarClienteModal(){
+
+    event.preventDefault();
+    let correoCliente = $('#correoClienteModal').val();
+    if (!validarCorreo(correoCliente)) {
+        Swal.fire({
+            icon: 'warning',
+            text: 'Formato de correo no valido.',
+            timer: 2500,
+            showConfirmButton: false
+          })
+        return;
+    }
+    var formData = $('#formCrearCliente').serialize();
+
+    showpreloader();
+    var rutaActual = window.location.href;
+
+    $.ajax({
+        type: "POST",
+        url: "crearCliente",
+        data: formData ,
+        success: function(data) { 
+            hidepreloader();
+
+            if(data.success){
+                $('#modalCrearCliente').modal('hide');
+                
+                completarCliente(data.data.id)
+
+            }
+
+            let iconf = data.success ? 'success' : 'error';
+            Swal.fire({
+                icon: iconf,
+                html: '<b><i>' + data.message + '</i></b> ',
+                timer: 2500,
+                showConfirmButton: false
+            });
+        },
+        error: function (xhr, status) {
+            alert('Disculpe, existió un problema en el servidor - Recargue la Pagina');
+        },
+        complete: function (xhr, status) {
+            hidepreloader();
+        }
+    });
+}
+
+/*   
+guardar remision
+*/
+function guardarRemision(event){
+    event.preventDefault();
+
+    let cliente = clienteId;
+
+    if (cliente == '') {
+        Swal.fire({
+            icon: 'warning',
+            text: 'Por favor, Seleccione un cliente.',
+            timer: 1200,
+            showConfirmButton: false
+          })
+        return;
+    }
+    let productos = productosArray;
+    if (productos.length === 0) {
+        Swal.fire({
+            icon: 'warning',
+            text: 'Por favor, seleccione al menos un producto.',
+            timer: 1200,
+            showConfirmButton: false
+          })
+        return;
+    }
+    let precioTotal = productos.reduce((total, producto) => {
+        return total + producto.subtotal;
+    }, 0);
+
+    // Crear el objeto de datos
+    let data = {
+        cliente: cliente,
+        productos: productos,
+        precioTotal: parseInt(precioTotal)
+    };
+    $.ajax({
+        type: "POST",
+        url: "guardarRemision",
+        data: JSON.stringify(data),
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json',
+        success: function(data) { 
+            hidepreloader();
+
+            if(data.success){
+                limpiarDatosRemision()
+
+            }
+
+            let iconf = data.success ? 'success' : 'error';
+            Swal.fire({
+                icon: iconf,
+                html: '<b><i>' + data.message + '</i></b> ',
+                timer: 2500,
+                showConfirmButton: false
+            });
+        },
+        error: function (xhr, status) {
+            alert('Disculpe, existió un problema en el servidor - Recargue la Pagina');
+        },
+        complete: function (xhr, status) {
+            hidepreloader();
+        }
+    });
+}
+function limpiardatosclienteRemision(){
+    $('#nombreCliente').val('')
+    $('#correoCliente').val('')
+    $('#direccionCliente').val('')
+    $('#celularCliente').val('')
+    $('#telefonoCliente').val('')
+    clienteId = '';
+}
+function limpiarDatosRemision(){
+    productosArray = [];
+    actualizarTablaProductos();
+    limpiarCamposProducto();
+    limpiardatosclienteRemision();
 }

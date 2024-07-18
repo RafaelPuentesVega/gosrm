@@ -10,6 +10,9 @@
 .table tbody tr:hover {
     background-color: #ff0000;
 }
+.input-group-addon{
+    width: 40px ;
+}
 </style>
 @endsection
 @section('content')
@@ -30,8 +33,9 @@
                     <div class="container-fluid">
 
                             <form id="formDatosCliente">
+                                
                                 <fieldset class="border ">
-                                    <legend class="float-none w-auto p-2" style="font-size: 16px">Información Personal</legend>
+                                    <legend class="float-none w-auto p-2" style="font-size: 16px">Información Cliente</legend>
 
                                     <div class="row" >
                                         <div class="col-md-4">
@@ -40,7 +44,7 @@
                                                     <span id="btnAbrirBuscarCliente" class="input-group-addon" style="width: 40px ; cursor: pointer;" id="basic-addon1">
                                                         <i  style="color: #6c757d; font-size: 16px; " class="fa fa-search"></i>
                                                     </span>
-                                                    <input placeholder="Digite numero de documento"  class="form-control text-uppercase" id="documentoCliente" name="documentoCliente">
+                                                    <input type="number" placeholder="Digite numero de documento"  class="form-control text-uppercase" id="documentoCliente" name="documentoCliente">
                                                 </div>
 
                                             </div>
@@ -84,6 +88,8 @@
                                     <div class="row" >
                                         <div class="col-md-6">
                                             <div class="form-group">
+                                                <input disabled style="display: none" required type="text" class="form-control text-uppercase" id="idProducto" name="idProducto">
+
                                                 <label for="remisionNombreProducto">Producto</label>
                                                 <div class="input-group">
                                                     <span id="btnAbrirBuscarProducto" class="input-group-addon" style="width: 40px ; cursor: pointer;" id="basic-addon1">
@@ -127,7 +133,7 @@
 
                             <fieldset class="border ">
                                 <legend class="float-none w-auto p-2" style="font-size: 16px">Productos Agregados</legend>
-                                <table id="tablaProductosAgregados" class="table table-striped table-bordered">
+                                <table id="tablaProductosAgregados" class="table table-striped ">
                                     <thead>
                                         <tr>
                                             <th>#</th>
@@ -139,7 +145,6 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <!-- Aquí se agregarán las filas dinámicamente -->
                                     </tbody>
                                 </table>
                             </fieldset>
@@ -169,8 +174,12 @@
 {{-- modal productos --}}
 @include('modulos.remisiones.modalBuscarProductos')
 {{-- modal clientes --}}
-
 @include('modulos.remisiones.modalBuscarClientes')
+{{-- modal crear clientes --}}
+@include('modulos.cliente.create-modal')
+{{-- modal crear producto --}}
+@include('modulos.productos.create-modal')
+
 @endsection
 
 @section('js')
