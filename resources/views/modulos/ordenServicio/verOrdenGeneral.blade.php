@@ -653,6 +653,7 @@
                                                         <input hidden value="{{ $arrayData->valor_servicio_orden }}"
                                                             style="color: black;font-weight:bold ;margin-top: -10%;text-align: right; "
                                                             type="text" class="form-control number"
+                                                            @if ($arrayData->estadoOrden == 2 ) disabled @endif
                                                             name="valorservicio" id="valorservicio" placeholder=""
                                                             autocomplete="off">
                                                     @else
@@ -828,9 +829,9 @@
 @section('js')
     <script src="{!! url('js/jquery.min.js') !!}"></script>
     <script src="{!! url('assets/js/toastr.min.js') !!}"></script>
-    <script src="{!! url('js/editOrden.js?version=1.3') !!}"></script>
-    <script src="{!! url('js/entregarOrden.js?v=1.2') !!}"></script>
-    <script src="{!! url('js/ordenGeneral.js?v=1.0') !!}"></script>
+    <script src="{!! url('js/editOrden.js?version=1.1') !!}"></script>
+    <script src="{!! url('js/entregarOrden.js?v=1.1') !!}"></script>
+    <script src="{!! url('js/ordenGeneral.js?v=1.1') !!}"></script>
     <script src="{!! url('js/facturaNumero.js?v=1.0') !!}"></script>
 
 @endsection

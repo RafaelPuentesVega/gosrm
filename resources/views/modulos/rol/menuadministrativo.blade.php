@@ -98,6 +98,12 @@
                     <p>CAJA</p>
                 </a>
             </li>
+            <li @if (Request::url() == route('pedidos_proveedores')) class="active" @endif>
+                <a href="{{ url('pedidos_proveedores') }}">
+                    <i class="pe-7s-display2"></i>
+                    <p>PEDIDOS</p>
+                </a>
+            </li>
             <li @if (Request::url() == route('correos')) class="active" @endif>
                 <a href="{{ url('correos') }}">
                     <i class="pe-7s-mail-open-file"></i>

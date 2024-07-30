@@ -17,7 +17,9 @@ use App\Http\Controllers\AutocompleteController;
 use App\Http\Controllers\CajaController;
 use App\Http\Controllers\NotificacionesEmailController;
 use App\Http\Controllers\CorreoController;
+use App\Http\Controllers\PedidosController;
 use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\RemisionController;
 use App\Mail\EmailPdf as MailEmailPdf;
 use Illuminate\Support\Facades\Mail;
@@ -154,6 +156,7 @@ Route::post('getDataMovimientos',[CajaController::class, 'getDataMovimientos']) 
 Route::get('remisiones',[RemisionController::class, 'index']) ->name('remisiones');
 Route::get('autocompletedocumento',[AutocompleteController::class, 'autocompleteDocumento']);
 Route::post('guardarRemision',[RemisionController::class, 'guardarRemision']);
+Route::get('imprimir_remision/{idOrden}',[RemisionController::class, 'imprimirRemision']);
 
 //cliente
 Route::get('getproductos',[ProductoController::class, 'getproductos']);
@@ -166,3 +169,11 @@ Route::get('getproductos',[ProductoController::class, 'getproductos']);
 Route::post('agregarproducto',[ProductoController::class, 'saveProduct']);
 Route::get('autocompleteNombreProducto',[AutocompleteController::class, 'autocompleteNombreProducto']);
 Route::get('getProductoId',[ProductoController::class, 'getProductoId']);
+
+//pedidos 
+Route::get('pedidos_proveedores',[PedidosController::class, 'index']) ->name('pedidos_proveedores');
+Route::post('guardarPedido',[PedidosController::class, 'guardarPedido']);
+
+// proveedor
+Route::post('consultarProveedor',[ProveedorController::class, 'consultarProveedor']);
+Route::post('agregarProveedor',[ProveedorController::class, 'saveProveedor']);

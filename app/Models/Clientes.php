@@ -25,6 +25,11 @@ class Clientes extends Model
         'departamento_id',
         'municipio_id',
         'cliente_estado'
-];
+    ];
+
+    public static function getTableName()
+    {
+        return with(new static)->getTable();
+    }
 
 }

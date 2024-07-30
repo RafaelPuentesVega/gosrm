@@ -5,18 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Remisiones extends Model
+class Pedidos extends Model
 {
     use HasFactory;
 
 
-    protected $table = "remisiones";
+    protected $table = "pedidos";
     protected $fillable =[
         'id',
         'fecha',
         'total',
-        'cliente_id',
+        'proveedor_id',
         'metodo_pago',
+        'tipo_transaccion',
         'usuario_creacion'
     ];
 

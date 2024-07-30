@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MovimientosCaja;
+use App\Services\MovimientoCajaService;
 use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,11 +25,14 @@ class CajaController extends Controller
   }
     return view('modulos.caja.index');
   }
-  public function saveMovimiento(Request  $request)
+  public function saveMovimiento(Request  $request , $typeResponse = false)
   {
 
     $response = ["status" => true, "message" => "guardado con exito"];
     try {
+
+      $MovimientoCajaService = new MovimientoCajaService();
+
       $saveData = [
         "valor" => $request->get('valor'),
         "descripcion" => $request->get('descripcion'),
@@ -38,12 +42,17 @@ class CajaController extends Controller
         "metodo_pago" => $request->get('metodo_pago'),
       ];
 
-      MovimientosCaja::create($saveData);
+      $MovimientoCajaService->guardarMovimientoCaja($saveData);
+      
     } catch (\Exception $e) {
       $response = ["status" => false, "message" => "Ocurrio un error guardando", "error" => $e->getMessage()];
     }
+    if($typeResponse == true){
+      return $response;
+    }else{
+      return response()->json($response);
 
-    return response()->json($response);
+    }
   }
 
   public function getDataMovimientos(Request $request)

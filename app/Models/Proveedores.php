@@ -5,19 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Remisiones extends Model
+class Proveedores extends Model
 {
     use HasFactory;
 
+    protected $table = "proveedores";
 
-    protected $table = "remisiones";
-    protected $fillable =[
-        'id',
-        'fecha',
-        'total',
-        'cliente_id',
-        'metodo_pago',
-        'usuario_creacion'
+    protected $fillable = [
+        'nombre',
+        'ciudad', 
+        'celular',
+        'documento'
     ];
 
     public static function getTableName()

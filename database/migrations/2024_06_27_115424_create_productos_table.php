@@ -22,7 +22,7 @@ class CreateProductosTable extends Migration
             $table->string('marca', 250)->nullable();
             $table->string('modelo', 250)->nullable();
             $table->string('estado', 20);
-            $table->integer('cantidad_stock');
+            $table->integer('cantidad_stock')->default(0);
             $table->string('proveedor', 255)->nullable();
             $table->decimal('precio_compra', 10, 2)->nullable();
             $table->string('codigo_barras', 250)->unique();

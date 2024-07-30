@@ -26,6 +26,11 @@ class Productos extends Model
         'codigo_barras'
     ];
 
+    public function stockMovements()
+    {
+        return $this->hasMany(StockMovement::class);
+    }
+
     public static function getTableName()
     {
         return with(new static)->getTable();

@@ -60,7 +60,7 @@
            <script src="{!! url('assets/js/light-bootstrap-dashboard.js?v=1.4.0') !!}"></script>
             {{-- <script src="{!! url('assets/js/demo.js') !!}"></script> --}}
             <script src="{!! url('js/preloader.js?v=1.3') !!}"></script>
-            <script src="{!! url('js/global.js') !!}"></script>
+            <script src="{!! url('js/global.js?v=1.0') !!}"></script>
             <script src="{!! url('assets/js/bootstrap.min.js" type="text/javascript') !!}"></script>
             <script src="{!! url('sweetalert2/sweetalert2.js" type="text/javascript') !!}"></script>
             @if (!!!Auth::guest())

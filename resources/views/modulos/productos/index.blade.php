@@ -65,7 +65,7 @@
 <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap.min.js"></script>
 <script src="{!! url('js/producto.js') !!}"></script>
-<script src="{!! url('js/producto_crear.js') !!}">
+<script src="{!! url('js/producto_crear.js') !!}"></script>
 
 @endsection
 

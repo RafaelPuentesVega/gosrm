@@ -20,6 +20,7 @@ use App\Http\Controllers\Auth;
 use App\Mail\EmailPdf as MailEmailPdf;
 use App\Models\Observacion;
 use App\Models\TipoEquipo;
+use App\Services\MovimientoCajaService;
 use Carbon\Carbon;
 
 //use Illuminate\Mail\Mailable;
@@ -268,39 +269,60 @@ class OrdenServicioController extends Controller
 
     public function entregarOrden(Request $request)
     {
-        date_default_timezone_set('America/Bogota');
+        try {
+            date_default_timezone_set('America/Bogota');
 
-        $idOrden = $request->idOrden;
-        $estadoOrden = 3 ; // Colocamos estado 3 (1-Recien ingresa - 2-Terminada , 3-Entregada)
-        $fechaActual = new \DateTime();
-        $enviarEmail = $request->enviarEmail;
-        $userCreated =  Auth()->user()->name;
-
-        $arrayOrden  = DB::table('orden_servicio')
-        ->where('id_orden', '=', $idOrden)->get();
-       // dd($arrayOrden[0]->iva_orden);
-        if($request->sinIva == 'SI'){
-            $valorTotal = $arrayOrden[0]->valor_total_orden;
-            $ivaOrden = $arrayOrden[0]->iva_orden;
-            $valorTotalNew = $valorTotal - $ivaOrden;
-            //ACTUALIZAMOS EN LA BD CUANDO EL USUARIO ESCOGE "SIN IVA"
+            $idOrden = $request->idOrden;
+            $estadoOrden = 3 ; // Colocamos estado 3 (1-Recien ingresa - 2-Terminada , 3-Entregada)
+            $fechaActual = new \DateTime();
+            $enviarEmail = $request->enviarEmail;
+            $userCreated =  Auth()->user()->name;
+            $tipoPago = $request->tipoPago;
+            $arrayOrden  = DB::table('orden_servicio')
+            ->where('id_orden', '=', $idOrden)->get();
+           // dd($arrayOrden[0]->iva_orden);
+            if($request->sinIva == 'SI'){
+                $valorTotal = $arrayOrden[0]->valor_total_orden;
+                $ivaOrden = $arrayOrden[0]->iva_orden;
+                $valorTotalNew = $valorTotal - $ivaOrden;
+                //ACTUALIZAMOS EN LA BD CUANDO EL USUARIO ESCOGE "SIN IVA"
+                DB::table('orden_servicio')
+                ->where('id_orden', $idOrden)
+                ->update( [
+                    'iva_orden' => 0 ,//COLOCAMOS EL IVA EN 0
+                    'valor_total_orden' => $valorTotalNew ,
+                    'user_entrega' =>$userCreated ] );
+            }
             DB::table('orden_servicio')
             ->where('id_orden', $idOrden)
             ->update( [
-                'iva_orden' => 0 ,//COLOCAMOS EL IVA EN 0
-                'valor_total_orden' => $valorTotalNew ,
+                'estadoOrden' => $estadoOrden ,
+                'fecha_entrega_orden' => $fechaActual,
                 'user_entrega' =>$userCreated ] );
-        }
-        DB::table('orden_servicio')
-        ->where('id_orden', $idOrden)
-        ->update( [
-            'estadoOrden' => $estadoOrden ,
-            'fecha_entrega_orden' => $fechaActual,
-            'user_entrega' =>$userCreated ] );
+    
 
-            $response = Array('mensaje' => 'ok'   );
+            $ordenValor = DB::table('orden_servicio')
+            ->where('id_orden', $idOrden)->first();
+
+            //guardar movimientos en caja
+            $movimientoRequest = [
+                'valor' => $ordenValor->valor_total_orden,
+                'descripcion' => 'Orden de servicio N° ' . $idOrden,
+                'tipo' => 'ingreso',
+                'orden_id' => $idOrden,
+                'metodo_pago' => $tipoPago,
+                'user_creation' =>  auth()->user()->name
+            ];
+            $MovimientoCajaService = new MovimientoCajaService();            
+            $MovimientoCajaService->guardarMovimientoCaja($movimientoRequest);
+
+            $response = Array('mensaje' => 'ok' );
             $pdfOrden =  OrdenServicioController::ordenSalidaPdf( $enviarEmail ,$idOrden);
-            return json_encode($response);
+        } catch (\Exception $e) {
+            $response['mensaje'] = 'error';
+            $response['error'] = $e->getMessage();
+        }
+        return json_encode($response);
     }
     public function ordenGeneral($id_cliente)
     {
@@ -464,7 +486,6 @@ class OrdenServicioController extends Controller
 
             $numeroOrden = $array->id_orden ;
         } catch (\Throwable $e) {
-            dd($e);
             return view('errors.404');
 
         }

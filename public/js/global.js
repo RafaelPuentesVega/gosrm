@@ -77,6 +77,22 @@ function formatoPreciovalorNumero(valor) {
     return  valor;
 }
 
+function fechaActual(){
+    var today = new Date();
+    var year = today.getFullYear();
+    var month = String(today.getMonth() + 1).padStart(2, '0');
+    var day = String(today.getDate()).padStart(2, '0');
+    todayFormatted = year + '-' + month + '-' + day;
+    return todayFormatted;
+}
+
+// Añadir la clase required-label a los labels de campos requeridos
+function fieldRequired(){
+    $('form :input[required]').each(function() {
+        var label = $('label[for="' + $(this).attr('id') + '"]');
+        label.addClass('required-label');
+    });
+}
 $('#changePasswordBtn').click(function() {
 
     var form = $('#changePasswordForm');

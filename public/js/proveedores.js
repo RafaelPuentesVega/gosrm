@@ -1,33 +1,12 @@
 $(document).ready(function() {
-
-    $('#btnAbrirProducto').on('click', function() {
-        limpiarCampos()
-        $('#modalAgregarProducto').modal('show');
+    $('#btn-crear-proveedor').on('click', function() {
+        guardarProveedor();
     });
-
-    $('#btn-crear-producto').on('click', function() {
-        guardarProducto();
-    });
-
-    fieldRequired()
-    
 });
 
-function cerrarModalAddProduct(){
-    $('#modalAgregarProducto').modal('hide');
-}
-// Función para limpiar los campos del formulario
-function limpiarCampos() {
-    $('#formAgregarProducto')[0].reset();
-}
+function guardarProveedor(){
 
-
-
-function guardarProducto(){
-
-    event.preventDefault();
-
-    var formulario = $('#formAgregarProducto');
+    var formulario = $('#formAgregarProveedor');
 
     if (!validarCamposObligatorios(formulario)) {
         Swal.fire({
@@ -39,24 +18,20 @@ function guardarProducto(){
         // alert('Por favor, complete todos los campos obligatorios.');
         return;
     }
-    var formData = $('#formAgregarProducto').serialize();
+    var formData = $('#formAgregarProveedor').serialize();
 
     showpreloader();
     var rutaActual = window.location.href;
 
     $.ajax({
         type: "POST",
-        url: "agregarproducto",
+        url: "agregarProveedor",
         data: formData ,
         success: function(data) { 
             hidepreloader();
 
             if(data.success){
-                cerrarModalAddProduct();
-                //actualizar la tabla
-                if (rutaActual.includes('productos')) {
-                    loadTableProducto();
-                }
+                $('#modalAgregarProveedor').modal('hide');
             }
 
             let iconf = data.success ? 'success' : 'error';
@@ -71,6 +46,7 @@ function guardarProducto(){
             alert('Disculpe, existió un problema en el servidor - Recargue la Pagina');
         },
         complete: function (xhr, status) {
+            hidepreloader();
         }
     });
 }

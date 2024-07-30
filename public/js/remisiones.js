@@ -4,6 +4,7 @@ var clienteId = '';
 var productoId = '';
 $(document).ready(function() {
 
+    fieldRequired();//agregar * a los campos obligatorios
 
     //abrir modal producto
     $('#btnAbrirBuscarProducto').on('click', function() {
@@ -32,11 +33,6 @@ $(document).ready(function() {
     $('#btnAbrirBuscarCliente').on('click', function() {
         loadTableBuscarCliente()
         $('#modalBuscarCliente').modal('show');
-    });
-    // Añadir la clase required-label a los labels de campos requeridos
-    $('form :input[required]').each(function() {
-        var label = $('label[for="' + $(this).attr('id') + '"]');
-        label.addClass('required-label');
     });
 
     $("#documentoCliente").on("blur", function() {
@@ -149,7 +145,7 @@ function actualizarTablaProductos() {
 
     productosArray.forEach((producto, index) => {
         tabla.append(`
-            <tr>
+            <tr style="cursor: default">
                 <td>${index + 1}</td>
                 <td>${producto.nombre}</td>
                 <td>${producto.cantidad}</td>
@@ -164,7 +160,7 @@ function actualizarTablaProductos() {
     });
 
     tabla.append(`
-        <tr>
+        <tr style="cursor: default">
             <td colspan="4" class="text-right"><strong>Total:</strong></td>
             <td><strong>${formatoPreciovalorNumero(total)}</strong></td>
             <td></td>
@@ -427,11 +423,22 @@ function guardarClienteModal(){
 /*   
 guardar remision
 */
-function guardarRemision(event){
-    event.preventDefault();
-
+function guardarRemision(){
     let cliente = clienteId;
 
+    var formulario = $('#formDatosRemision');
+
+
+    if (!validarCamposObligatorios(formulario)) {
+        Swal.fire({
+            icon: 'warning',
+            text: 'Por favor, complete todos los campos obligatorios.',
+            timer: 1200,
+            showConfirmButton: false
+          })
+        // alert('Por favor, complete todos los campos obligatorios.');
+        return;
+    }
     if (cliente == '') {
         Swal.fire({
             icon: 'warning',
@@ -452,15 +459,18 @@ function guardarRemision(event){
         return;
     }
     let precioTotal = productos.reduce((total, producto) => {
-        return total + producto.subtotal;
+        return parseInt(total) + parseInt(producto.subtotal);
     }, 0);
-
+    let tipoPago =     $('#tipoPagoPedido').val(); 
+    
     // Crear el objeto de datos
     let data = {
         cliente: cliente,
         productos: productos,
-        precioTotal: parseInt(precioTotal)
+        precioTotal: parseInt(precioTotal),
+        tipoPago: tipoPago
     };
+    showpreloader();
     $.ajax({
         type: "POST",
         url: "guardarRemision",
@@ -470,18 +480,19 @@ function guardarRemision(event){
         success: function(data) { 
             hidepreloader();
 
-            if(data.success){
-                limpiarDatosRemision()
-
-            }
-
             let iconf = data.success ? 'success' : 'error';
+            
             Swal.fire({
                 icon: iconf,
                 html: '<b><i>' + data.message + '</i></b> ',
                 timer: 2500,
                 showConfirmButton: false
             });
+            if(data.success){
+                limpiarDatosRemision()
+                window.open ('imprimir_remision/'+ data.idremision,"remision","toolbar=0,scrollbars=0,location=0,statusbar=0,menubar=0,resizable=0,width=800,height=600,left = 390,top = 50" );
+            }
+
         },
         error: function (xhr, status) {
             alert('Disculpe, existió un problema en el servidor - Recargue la Pagina');

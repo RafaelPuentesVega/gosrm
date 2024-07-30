@@ -24,73 +24,70 @@
             <div class="card ">
                 <div class="header" style="background-color: #06419f">
                     <h3 class="title text-center" style=" color: #ffffff ; padding-bottom :10px;">
-                        <strong>REMISIONES</strong>
+                        <strong>PEDIDOS PROVEEDOR</strong>
                 </div>
             </div>
             <div class="card">
                 <br>
-                <form id="formDatosRemision">
-                    <div class="row">
-                        <div class="col-md-3" >
-                            <div class="form-group">                                            
-                                <label for="tipoPagoPedido">Tipo Pago</label>
-                                <select required class="form-control "  id="tipoPagoPedido" name="tipoPagoPedido">
-                                    <option value="" disabled selected></option>
-                                    <option value="efectivo" >Efectivo</option>
-                                    <option value="transferencia" >Transferencia </option>
-                                </select>                                              
-                            </div>                                        
-                        </div>
-                    </div>
-                </form>
                 <div class="row">
                     <div class="container-fluid">
 
-                            <form id="formDatosCliente">
-                                
+                            <form id="formDatosPedido">
+
+                                <div class="row" >
+                                    <div class="col-md-3">
+                                        <div class="form-group">                                            
+                                            <label for="fechaPedido">Fecha Pedido</label>
+                                            <input required type="date" placeholder="Fecha pedido"  class="form-control" id="fechaPedido" name="fechaPedido">
+                                        </div>                                        
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">                                            
+                                            <label for="transaccionPedido">Transacción</label>
+                                            <select required class="form-control "  id="transaccionPedido" name="transaccionPedido">
+                                                <option value="" disabled selected></option>
+                                                <option value="contado" >Contado</option>
+                                                <option value="credito" >Credito</option>
+                                            </select>                                              
+                                        </div>                                        
+                                    </div>
+                                    <div class="col-md-3" id="tipoPagoContainer" style="display: none;">
+                                        <div class="form-group">                                            
+                                            <label for="tipoPagoPedido">Tipo Pago</label>
+                                            <select class="form-control "  id="tipoPagoPedido" name="tipoPagoPedido">
+                                                <option value="" disabled selected></option>
+                                                <option value="efectivo" >Efectivo</option>
+                                                <option value="transferencia" >Transferencia </option>
+                                            </select>                                              
+                                        </div>                                        
+                                    </div>
+                                </div>
                                 <fieldset class="border ">
-                                    <legend class="float-none w-auto p-2" style="font-size: 16px">Información Cliente</legend>
+                                    <legend class="float-none w-auto p-2" style="font-size: 16px">Información Proveedor</legend>
 
                                     <div class="row" >
                                         <div class="col-md-4">
                                             <div class="form-group">
                                                 <div class="input-group">
-                                                    <span id="btnAbrirBuscarCliente" class="input-group-addon" style="width: 40px ; cursor: pointer;" id="basic-addon1">
+                                                    <span id="btnAbrirBuscarProveedor" class="input-group-addon" style="width: 40px ; cursor: pointer;" id="basic-addon1">
                                                         <i  style="color: #6c757d; font-size: 16px; " class="fa fa-search"></i>
                                                     </span>
-                                                    <input type="number" placeholder="Digite numero de documento"  class="form-control text-uppercase" id="documentoCliente" name="documentoCliente">
+                                                    <input type="number" placeholder="Digite numero de documento"  class="form-control text-uppercase" id="documentoProveedor" name="documentoProveedor">
                                                 </div>
 
                                             </div>
                                         </div>
                                         <div class="col-md-4">
                                             <div class="form-group">
-                                                <input disabled type="text" class="form-control text-uppercase" id="nombreCliente" name="nombreCliente">
+                                                <input disabled type="text" class="form-control text-uppercase" id="nombreProveedor" name="nombreProveedor">
                                             </div>
                                         </div>
                                         <div class="col-md-4">
                                             <div class="form-group">
-                                                <input disabled type="text" class="form-control text-uppercase" id="correoCliente" name="correoCliente">
+                                                <input disabled type="text" class="form-control text-uppercase" id="ubicacionProveedor" name="ubicacionProveedor">
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="row" >
-                                        <div class="col-md-4">
-                                            <div class="form-group">
-                                                <input disabled type="text" class="form-control text-uppercase" id="direccionCliente" name="direccionCliente">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-group">
-                                                <input disabled type="text" class="form-control text-uppercase" id="celularCliente" name="celularCliente">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-group">
-                                                <input disabled type="text" class="form-control text-uppercase" id="telefonoCliente" name="telefonoCliente">
-                                            </div>
-                                        </div>
-                                    </div>  
                                 </fieldset>
 
                             </form>
@@ -106,7 +103,7 @@
 
                                                 <label for="remisionNombreProducto">Producto</label>
                                                 <div class="input-group">
-                                                    <span id="btnAbrirBuscarProducto" class="input-group-addon" style="width: 40px ; cursor: pointer;" id="basic-addon1">
+                                                    <span id="btnAbrirBuscarProductoPedido" class="input-group-addon" style="width: 40px ; cursor: pointer;" id="basic-addon1">
                                                         <i  style="color: #6c757d; font-size: 16px; " class="fa fa-search"></i>
                                                     </span>
                                                         <input placeholder="Nombre producto" required type="text" class="form-control text-uppercase" id="remisionNombreProducto" name="remisionNombreProducto">
@@ -166,15 +163,11 @@
                             <br> <br>
                             <div>
                                 <div class="text-right">
-                                    <button type="submit" id="btn-guardar-remision" class="btn btn-primary text-bold-700">Guardar Remision</button>
+                                    <button type="submit" id="btn-guardar-pedido" class="btn btn-primary text-bold-700">Guardar Pedido</button>
                                 </div>     
-                            </div>
-                            
+                            </div>                           
                             
                     </div>
-
-
-
                     <br> <br>
                 </div>
 
@@ -187,10 +180,10 @@
 
 {{-- modal productos --}}
 @include('modulos.remisiones.modalBuscarProductos')
-{{-- modal clientes --}}
-@include('modulos.remisiones.modalBuscarClientes')
-{{-- modal crear clientes --}}
-@include('modulos.cliente.create-modal')
+{{-- modal buscar proveedor --}}
+@include('modulos.proveedor.modalBuscarProveedor')
+{{-- modal crear proveedor --}}
+@include('modulos.proveedor.create-modal')
 {{-- modal crear producto --}}
 @include('modulos.productos.create-modal')
 
@@ -202,8 +195,11 @@
 <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap.min.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-<script src="{!! url('js/remisiones.js?v=1') !!}"></script>
+<script src="{!! url('js/proveedores.js') !!}"></script>
+<script src="{!! url('js/remisiones.js') !!}"></script>
+<script src="{!! url('js/pedido.js') !!}"></script>
 <script src="{!! url('js/producto_crear.js') !!}"></script>
+
 
 @endsection
 
