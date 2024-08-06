@@ -13,7 +13,6 @@ class MovimientoCajaService
     //Guardar movimientos en la caja
     public function guardarMovimientoCaja($data)
     {
-        DB::transaction(function () use ($data) {
 
         $saveData = [
             "valor" => $data['valor'],
@@ -22,11 +21,10 @@ class MovimientoCajaService
             "orden_id" => $data['orden_id'],
             "user_creation" => $data['user_creation'],
             "metodo_pago" => $data['metodo_pago'],
-            ];
+        ];
     
-            MovimientosCaja::create($saveData);
+        MovimientosCaja::create($saveData);
 
-        });
     }
 
 

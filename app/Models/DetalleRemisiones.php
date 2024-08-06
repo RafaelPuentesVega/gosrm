@@ -19,6 +19,16 @@ class DetalleRemisiones extends Model
         'subtotal'
     ];
 
+    public function remision()
+    {
+        return $this->belongsTo(Remisiones::class);
+    }
+
+    public function producto()
+    {
+        return $this->belongsTo(Productos::class , 'producto_id');
+    }
+
     public static function getTableName()
     {
         return with(new static)->getTable();

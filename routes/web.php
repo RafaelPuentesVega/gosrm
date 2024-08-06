@@ -157,6 +157,9 @@ Route::get('remisiones',[RemisionController::class, 'index']) ->name('remisiones
 Route::get('autocompletedocumento',[AutocompleteController::class, 'autocompleteDocumento']);
 Route::post('guardarRemision',[RemisionController::class, 'guardarRemision']);
 Route::get('imprimir_remision/{idOrden}',[RemisionController::class, 'imprimirRemision']);
+Route::get('remisiones/listar',[RemisionController::class, 'listar']);
+Route::get('getRemisiones',[RemisionController::class, 'getRemisiones']);
+Route::get('getDetalleRemision',[RemisionController::class, 'getDetalleRemision']);
 
 //cliente
 Route::get('getproductos',[ProductoController::class, 'getproductos']);

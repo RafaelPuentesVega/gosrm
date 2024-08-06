@@ -77,7 +77,8 @@ class RemisionController extends Controller
         "fecha" => now(),
         "total" => $precioTotal,
         "cliente_id" => $idCliente,
-        "usuario_creacion" => auth()->user()->id
+        "usuario_creacion" => auth()->user()->id,
+        'tipoPago' => $tipoPago
       ];
 
       $stockService = new StockService();
@@ -173,5 +174,105 @@ class RemisionController extends Controller
 
   }
 
+  /* lista las remisiones creadas*/
+  public function getRemisiones(Request $request)
+  {
+
+    $response = [
+      'success' => true,
+      'message' => 'Se guardo correctamente'
+    ];
+    try {
+      $fechaInicial = $request->get('fechaInicial');
+      $fechaFinal = $request->get('fechaFinal');
+      $documento = $request->get('documento');
+      $nombres = $request->get('fechaInicial');
+
+
+      $remisiones = Remisiones::join(Clientes::getTableName() , Clientes::getTableName().'.cliente_id' , Remisiones::getTableName().'.cliente_id' );
+
+      if($fechaInicial != ''){
+        $remisiones = $remisiones->where(Remisiones::getTableName() .'fecha' , '>=' , $fechaInicial);
+      }
+
+      if($fechaFinal != ''){
+        $remisiones = $remisiones->where(Remisiones::getTableName() .'fecha' , '<=' , $fechaFinal);
+      }
+
+      if($documento != ''){
+        $remisiones = $remisiones->where(Clientes::getTableName() .'cliente_documento' , 'LIKE' , '%'.$documento.'%');
+      }
+      if($nombres != ''){
+        $remisiones = $remisiones->where(Clientes::getTableName() .'cliente_nombres' , 'LIKE' , '%'.$nombres.'%');
+      }
+
+      $response['data'] = $remisiones->orderBy(Remisiones::getTableName().'.id' , 'DESC')->get();
+    } catch (\Exception $e) {
+      $response = [
+        'success' => false,
+        'message' => $e->getMessage(),
+        'error' => $e
+      ];
+    }
+    return response()->json($response);
+
+
+  }
+
+
+    /* lista las remisiones creadas*/
+    public function listar(Request $request)
+    {
+      if(auth()->user()->rol != 'ADMINISTRATIVO'){
+        return redirect('inicio');
+      }
+  
+      return view('modulos.remisiones.listar.index');
+  
+  
+    }
+
+    public function getDetalleRemision(Request $request){
+      
+      $response = [];
+      try {
+
+        $id = $request->get('id');
+        $remision = Remisiones::with(['cliente', 'detalles.producto'])
+        ->where(Remisiones::getTableName().'.id' , $id)->first();
+       // dd($remision->toArray());
+        if (!$remision) {
+            return response()->json(['error' => 'Remisión no encontrada'], 404);
+        }
+        $response = [
+            'cliente_documento' => $remision->cliente->cliente_documento,
+            'cliente_nombres' => $remision->cliente->cliente_nombres,
+            'cliente_correo' => $remision->cliente->cliente_correo,
+            'cliente_telefono' => $remision->cliente->cliente_telefono,
+            'cliente_celular' => $remision->cliente->cliente_celular,
+            'cliente_direccion' => $remision->cliente->cliente_direccion,
+            'idRemision' => $remision->id,
+            'tipoPago' => $remision->tipoPago,
+            'total' =>  $remision->total,
+            'productos' => $remision->detalles->map(function ($detalle) {
+                return [
+                    'producto' => $detalle->producto->nombre. "(".$detalle->producto->marca.")",
+                    'cantidad' => $detalle->cantidad,
+                    'precio_unitario' => $detalle->precio_unitario,
+                    'subtotal' => $detalle->subtotal,
+                    'total' => '50000000' 
+
+                ];
+            })
+        ];
+
+      } catch (\Exception $e) {
+        dd( $e);
+
+      }
+
+      return response()->json($response);
+
+    }
 
 }

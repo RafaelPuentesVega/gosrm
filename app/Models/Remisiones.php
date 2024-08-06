@@ -17,8 +17,20 @@ class Remisiones extends Model
         'total',
         'cliente_id',
         'metodo_pago',
-        'usuario_creacion'
+        'usuario_creacion',
+        'tipoPago'
     ];
+
+    public function cliente()
+    {
+        return $this->belongsTo(Clientes::class,  'cliente_id');
+    }
+
+    public function detalles()
+    {
+        return $this->hasMany(DetalleRemisiones::class , 'remision_id' );
+    }
+
 
     public static function getTableName()
     {

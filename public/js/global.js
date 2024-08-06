@@ -86,6 +86,19 @@ function fechaActual(){
     return todayFormatted;
 }
 
+//pasar fecha a formato de 12 horas
+function formatoFecha12Horas(dateTimeStr) {
+    const [datePart, timePart] = dateTimeStr.split(' ');
+    let [hours, minutes, seconds] = timePart.split(':').map(Number);
+
+    const period = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12; // Convert 0 to 12 for midnight/midday
+
+    const formattedTime = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} ${period}`;
+    return `${datePart} ${formattedTime}`;
+}
+
+
 // Añadir la clase required-label a los labels de campos requeridos
 function fieldRequired(){
     $('form :input[required]').each(function() {

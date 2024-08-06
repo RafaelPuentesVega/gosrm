@@ -35,6 +35,13 @@ $(document).ready(function() {
         $('#modalBuscarCliente').modal('show');
     });
 
+    //abrir formulario vista remisiones
+    $('#btn-abrir-frm-remisiones').on('click', function() {
+        window.location.href = 'remisiones/listar';
+
+    });
+
+        
     $("#documentoCliente").on("blur", function() {
         documentoCliente = $('#documentoCliente').val();
         if(documentoCliente.length > 4){

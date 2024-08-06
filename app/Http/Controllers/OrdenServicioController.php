@@ -273,7 +273,7 @@ class OrdenServicioController extends Controller
             date_default_timezone_set('America/Bogota');
 
             $idOrden = $request->idOrden;
-            $estadoOrden = 3 ; // Colocamos estado 3 (1-Recien ingresa - 2-Terminada , 3-Entregada)
+            $estadoOrden = '3' ; // Colocamos estado 3 (1-Recien ingresa - 2-Terminada , 3-Entregada)
             $fechaActual = new \DateTime();
             $enviarEmail = $request->enviarEmail;
             $userCreated =  Auth()->user()->name;
@@ -293,7 +293,7 @@ class OrdenServicioController extends Controller
                     'valor_total_orden' => $valorTotalNew ,
                     'user_entrega' =>$userCreated ] );
             }
-            DB::table('orden_servicio')
+            $updateOrden = DB::table('orden_servicio')
             ->where('id_orden', $idOrden)
             ->update( [
                 'estadoOrden' => $estadoOrden ,

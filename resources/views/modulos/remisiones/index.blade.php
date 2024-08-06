@@ -25,6 +25,7 @@
                 <div class="header" style="background-color: #06419f">
                     <h3 class="title text-center" style=" color: #ffffff ; padding-bottom :10px;">
                         <strong>REMISIONES</strong>
+                    </h3>
                 </div>
             </div>
             <div class="card">
@@ -41,7 +42,15 @@
                                 </select>                                              
                             </div>                                        
                         </div>
+                    <div class="col-md-9" >
+                        <div class="form-group"> 
+                            <div style="text-align: right">
+                                <button id="btn-abrir-frm-remisiones" type="button" class="btn btn-primary" >Ver remisiones</button>
+
+                            </div>
+                        </div>
                     </div>
+                </div>
                 </form>
                 <div class="row">
                     <div class="container-fluid">
