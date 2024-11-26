@@ -2,6 +2,7 @@
 @section('content')
 @section('css')
     <style>
+        
     hr{
      border: 0.01px solid #bababa3f !important;
     }
@@ -10,13 +11,17 @@
         height: 4rem !important;
         padding: 1.5rem 1.5rem !important;
     }
+    #tablaBuscarProductos tbody tr {
+    cursor: pointer;
+    }
     </style>
     <link href="{!! url('assets/js/toastr.min.css') !!}" rel="stylesheet" />
     <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
     <link href="{!! url('fontawesome/css/all.css" rel="stylesheet') !!}"/>
     <link href="{!! url('assets/js/toastr.min.css') !!}" rel="stylesheet" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
-
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 
 @endsection
 
@@ -598,11 +603,18 @@
                                                     </th>
                                                     <th width=""
                                                         style="font-weight:normal;text-align: left; border: rgba(0, 0, 0, 0.185) 1px solid">
-                                                        <input style="margin-top: 0% " type="text"
-                                                            class="form-control pull-right" name="descripcionRepuesto"
-                                                            id="descripcionRepuesto" placeholder="Nombre Repuesto"
-                                                            autocomplete="off"
-                                                            onKeyUp="document.getElementById(this.id).value=document.getElementById(this.id).value.toUpperCase()">
+                                                        <input style="display: none" disabled class="form-control" id="idProducto" name="idProducto" type="text" name="">
+                                                        <div class="input-group">
+                                                            <span id="btnAbrirBuscarProductoOrden" class="input-group-addon" style="width: 40px ; cursor: pointer;" id="basic-addon1">
+                                                                <i  style="color: #6c757d; font-size: 16px; " class="fa fa-search"></i>
+                                                            </span>
+
+                                                            <input style=" align-content: flex-end; margin-top: 0% ; " type="text"
+                                                                class="form-control pull-right" name="remisionNombreProducto"
+                                                                id="remisionNombreProducto" placeholder="Nombre Repuesto"
+                                                                autocomplete="off"
+                                                                onKeyUp="document.getElementById(this.id).value=document.getElementById(this.id).value.toUpperCase()">
+                                                        </div>
                                                     </th>
                                                     <th width="" colspan="2"
                                                         style="font-size: 13px ;font-weight:normal;  text-align: left; border: rgba(0, 0, 0, 0.089) 1.5px solid">
@@ -826,14 +838,23 @@
 @include('modulos.ordenServicio.modal.mldCambiarEstadoOrden')
 @include('modulos.ordenServicio.modal.mdlCambiarTecnico')
 @include('modulos.ordenServicio.modal.mldEnviarBodega')
+{{-- modal productos --}}
+@include('modulos.remisiones.modalBuscarProductos')
 @section('js')
-    <script src="{!! url('js/jquery.min.js') !!}"></script>
-    <script src="{!! url('assets/js/toastr.min.js') !!}"></script>
-    <script src="{!! url('js/editOrden.js?version=1.1') !!}"></script>
-    <script src="{!! url('js/entregarOrden.js?v=1.1') !!}"></script>
-    <script src="{!! url('js/ordenGeneral.js?v=1.1') !!}"></script>
-    <script src="{!! url('js/facturaNumero.js?v=1.0') !!}"></script>
+    <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
 
+    {{-- <script src="{!! url('js/jquery.min.js') !!}"></script> --}}
+    <script src="{!! url('assets/js/toastr.min.js') !!}"></script>
+    <script src="{!! url('js/editOrden.js?version=1.2') !!}"></script>
+    <script src="{!! url('js/entregarOrden.js?v=1.2') !!}"></script>
+    <script src="{!! url('js/ordenGeneral.js?v=1.2') !!}"></script>
+    <script src="{!! url('js/facturaNumero.js?v=1.0') !!}"></script>
+    <script src="{!! url('js/producto_crear.js?v=1') !!}"></script>
+    <script src="{!! url('js/remisiones.js?v=1') !!}"></script>
 @endsection
 
 

@@ -87,7 +87,7 @@ class RemisionController extends Controller
       $idRemision =  $remision->id;
       foreach ($productoArray as $key => $value) {
 
-        $stockService->adjustStock($value['id'], $value['cantidad'], 'salida');
+        $stockService->adjustStock($value['id'], $value['cantidad'], 'salida' , 'remision' , $idRemision);
 
         $dataDetalleRemision = [
           'remision_id' => $idRemision,

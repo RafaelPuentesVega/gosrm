@@ -22,6 +22,9 @@ use App\Models\Observacion;
 use App\Models\TipoEquipo;
 use App\Services\MovimientoCajaService;
 use Carbon\Carbon;
+use Exception;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 //use Illuminate\Mail\Mailable;
 
@@ -299,7 +302,7 @@ class OrdenServicioController extends Controller
                 'estadoOrden' => $estadoOrden ,
                 'fecha_entrega_orden' => $fechaActual,
                 'user_entrega' =>$userCreated ] );
-    
+
 
             $ordenValor = DB::table('orden_servicio')
             ->where('id_orden', $idOrden)->first();
@@ -313,7 +316,7 @@ class OrdenServicioController extends Controller
                 'metodo_pago' => $tipoPago,
                 'user_creation' =>  auth()->user()->name
             ];
-            $MovimientoCajaService = new MovimientoCajaService();            
+            $MovimientoCajaService = new MovimientoCajaService();
             $MovimientoCajaService->guardarMovimientoCaja($movimientoRequest);
 
             $response = Array('mensaje' => 'ok' );
@@ -340,7 +343,7 @@ class OrdenServicioController extends Controller
         }
         //Consulta para traer los repuestos de la orden
         $repuesto = DB::table('repuesto')
-        ->where('id_orden_servicio_repuesto', '=', $id_cliente)->get()->toArray(); 
+        ->where('id_orden_servicio_repuesto', '=', $id_cliente)->get()->toArray();
 
         $pendAutRep = DB::table('repuesto')
         ->where('id_orden_servicio_repuesto', '=', $id_cliente)
@@ -393,106 +396,38 @@ class OrdenServicioController extends Controller
      * @param  \App\Models\consultorios  $consultorios
      * @return \Illuminate\Http\Response
      */
-    public static function ordenSalidaPdf($rsemail ,$idOrden)
+    public function ordenSalidaPdf($rsemail ,$idOrden)
     {
         try{
         date_default_timezone_set('America/Bogota');
 
         $sendEmail = $rsemail;
-        $dataArray = DB::table('orden_servicio')
-        ->where('id_orden', '=', $idOrden)->get()->toArray();
-        $dataArray = $dataArray[0];
-                $pdfData = DB::table('orden_servicio as orden')
-                ->join('cliente', 'orden.id_cliente_orden', '=', 'cliente.cliente_id')
-                ->join('equipo', 'orden.id_equipo_orden', '=', 'equipo.equipo_id')
-                ->leftJoin('departamentos', 'cliente.departamento_id', '=', 'departamentos.departamento_id')
-                ->leftJoin('municipios', 'cliente.municipio_id', '=', 'municipios.municipio_id')
-                ->join('users', 'users.id', '=', 'orden.id_tecnico_orden')
-                ->leftJoin('usuario_empresa', 'orden.id_cliente_usuario_orden', '=', 'usuario_empresa.id_cliente_empresa')
-                ->select('cliente.*', 'equipo.*', 'users.name', 'orden.*', 'departamentos.departamento_nombre','municipios.municipio_nombre','usuario_empresa.*' )
-                ->whereRaw("orden.id_orden = $idOrden")
-                ->get()->toArray();
-                $array = $pdfData[0];
-                setlocale(LC_ALL,"es_ES@euro","es_ES","esp");
-                //$fechaEntrada = $array->fecha_creacion_orden;
-                //$fechaEntrada= strftime("%d %b %Y",strtotime($fechaEntrada));
-                //$fechareparacion = $array->fecha_reparacion_orden;
-                //$fechareparacion= strftime("%d %b %Y",strtotime($fechareparacion));
-                //$fechaEntrega = $array->fecha_entrega_orden;
-                //$fechaEntrega= strftime("%d %b %Y",strtotime($fechaEntrega));
-                
 
-                // Configurar el idioma de Carbon para que las fechas se muestren en español
-                Carbon::setLocale('es_ES');        
-                $fechaEntrada = Carbon::parse($array->fecha_creacion_orden)->format('d M Y');
-                $fechareparacion = Carbon::parse($array->fecha_reparacion_orden)->formatLocalized('%d %b %Y');
-                $fechaEntrega = Carbon::parse($array->fecha_entrega_orden)->formatLocalized('%d %b %Y');
+        $orden = new OrdenServicio();
+        $orden = $orden->where('id_orden' ,$idOrden )->first();
 
+        $data = $this->prepararDatosOrdenSalidaPdf($orden);    
 
-                $data = [
-                    'orden' => $array->id_orden,
-                    'fecha_ingreso' =>  $fechaEntrada,
-                    'fecha_reparacion' =>  $fechareparacion,
-                    'fecha_entrega' =>  $fechaEntrega,
-                    'tipoCliente' => $array->cliente_tipo,
-                    'nombre' => $array->cliente_nombres,
-                    'documento' => $array->cliente_documento,
-                    'correo'=> $array->cliente_correo,
-                    'telefono' => $array->cliente_telefono,
-                    'celular' => $array->cliente_celular,
-                    'departamento' => $array->departamento_nombre,
-                    'municipio' => $array->municipio_nombre,
-                    'direccion' => $array->cliente_direccion,
-                    'celular_usuario' => $array->usuario_celular,
-                    'dependencia' => $array->usuario_dependencia,
-                    'usuario' => $array->usuario_nombre,
-                    'equipo' => $array->equipo_tipo,
-                    'marca' => $array->equipo_marca,
-                    'referencia' => $array->equipo_referencia,
-                    'serial' => $array->equipo_serial,
-                    'verficoFuncionamiento' => $array->verifica_funcionamiento_orden,
-                    'reporteTecnico' => $array->reporte_tecnico_orden,
-                    'accesorios' => $array->accesorios_orden,
-                    'adaptador' => $array->serial_adaptador_orden,
-                    'caracteristicas' => $array->caracteristicas_equipo_orden,
-                    'dano' => $array->descripcion_dano_orden,
-                    'tecnico' => $array->name,
-                    'subTotal' => $array->valor_repuestos_orden,
-                    'valorServicio' => $array->valor_servicio_orden,
-                    'iva' => $array->iva_orden,
-                    'totalOrden' => $array->valor_total_orden,
-                ];
+        $repuesto = $data['repuesto'];
+        $pdf = PDF::loadView('modulos.pdf.ordenSalida', $data['dataPdf'] ,  compact('repuesto') );
 
-                $repuesto = DB::table('repuesto')
-                ->join('orden_servicio as orden', 'orden.id_orden', '=', 'repuesto.id_orden_servicio_repuesto')
-                ->select('repuesto.*')
-                ->whereRaw("orden.id_orden = $idOrden")
-                ->get()->toArray(); 
+        if($sendEmail == 'SI'){
 
+            $data['dataPdf']['bodyValidate'] = 'true';
 
-            $emailSend = $array->emailSend;
+            $pdfEmail = PDF::loadView('modulos.pdf.ordenSalida', $data ,  compact('repuesto')  );
 
-            $pdf = PDF::loadView('modulos.pdf.ordenSalida', $data ,  compact('repuesto')  );
+            $SendEmail =  sendEmail::ordenSalidaEmail($pdfEmail, $data['modelSql']);
+        }
 
-            if($sendEmail == 'SI'){
+        $pdf->setPaper('carta' , 'landscape'); // Establece la orientación horizontal
 
-                $data['bodyValidate'] = 'true';
-
-                $pdfEmail = PDF::loadView('modulos.pdf.ordenSalida', $data ,  compact('repuesto')  );
-
-                $SendEmail =  sendEmail::ordenSalidaEmail($pdfEmail, $array);
-            }
-            $pdf->setPaper('carta' , 'landscape'); // Establece la orientación horizontal
-
-            $numeroOrden = $array->id_orden ;
+        $numeroOrden = $idOrden ;
         } catch (\Throwable $e) {
             return view('errors.404');
 
         }
-
-            return $pdf->stream('Orden entrada Numero ' .($numeroOrden).'.pdf');
-
-
+        return $pdf->stream('Orden entrada Numero ' .($numeroOrden).'.pdf');
 
 }
 
@@ -501,7 +436,7 @@ class OrdenServicioController extends Controller
         //
     }
 
-    public function guardarOrden(Request $request)
+    public function guardarOrden2(Request $request)
     {
             $estadoOrden = 1; //INICIALIZAMOS LA VARIABLE EN EL ESTADO 1 (1-INGRESADO - 2-ORDEN TERMINADA - 3-ORDEN ENTREGADA)
             //Consultamos en parametros, para traer los dias de vencimiento
@@ -571,89 +506,256 @@ class OrdenServicioController extends Controller
 
    public function ordenEntradaEmailAndPDF(Request $request , $idOrden  )
    {
+    
+        $orden = new OrdenServicio();
+        $orden = $orden->where('id_orden' ,$idOrden )->first();
+        // dd($orden);
+        $data = $this->prepararDatosOrdenIngresoPdf($orden);
 
-        date_default_timezone_set('America/Bogota');
+        $pdf = PDF::loadView('modulos.pdf.ordenIngreso', $data['dataPdf'] );
 
-        // $dataArray = OrdenServicio::latest('id_orden')->first();
-        //  $id = $dataArray['id_orden'];
-        $dataArray = DB::table('orden_servicio')
-        ->where('id_orden', '=', $idOrden)->get()->toArray();
-        $dataArray = $dataArray[0];
+        $numeroOrden =  $idOrden ;
+        $pdf->setPaper('carta' , 'landscape'); // Establece la orientación horizontal
+
+        return $pdf->stream('Orden entrada N° ' .($numeroOrden).' .pdf');
 
 
-            if($dataArray->id_cliente_usuario_orden == null || $dataArray->id_cliente_usuario_orden == 0){
-                $pdfData = DB::table('orden_servicio as orden')
-                ->join('cliente', 'orden.id_cliente_orden', '=', 'cliente.cliente_id')
-                ->join('equipo', 'orden.id_equipo_orden', '=', 'equipo.equipo_id')
-                ->join('departamentos', 'cliente.departamento_id', '=', 'departamentos.departamento_id')
-                ->join('municipios', 'cliente.municipio_id', '=', 'municipios.municipio_id')
-                ->join('users', 'users.id', '=', 'orden.id_tecnico_orden')
-                ->select('cliente.*', 'equipo.*','users.name', 'orden.*', 'departamentos.departamento_nombre','municipios.municipio_nombre' )
-                ->whereRaw("orden.id_orden = $idOrden")
-                ->get()->toArray();
+}
 
-                $array = $pdfData[0];
-                setlocale(LC_ALL,"es_ES@euro","es_ES","esp");
-                $fechaEntrada = $array->fecha_creacion_orden;
-                $fechaEntrada= strftime("%d %b %Y",strtotime($fechaEntrada));
-                $fechaEstimada = $array->fecha_estimada_orden;
-                $fechaEstimada= strftime("%d %b %Y",strtotime($fechaEstimada));
-                $data = [
-                    'orden' => $array->id_orden,
-                    'fecha_ingreso' => $fechaEntrada,
-                    'fecha_estimada' => $fechaEstimada,
-                    'tipoCliente' => $array->cliente_tipo,
-                    'nombre' => $array->cliente_nombres,
-                    'documento' => $array->cliente_documento,
-                    'correo'=> $array->cliente_correo,
-                    'telefono' => $array->cliente_telefono,
-                    'celular' => $array->cliente_celular,
-                    'departamento' => $array->departamento_nombre,
-                    'municipio' => $array->municipio_nombre,
-                    'direccion' => $array->cliente_direccion,
-                    'equipo' => $array->equipo_tipo,
-                    'marca' => $array->equipo_marca,
-                    'referencia' => $array->equipo_referencia,
-                    'serial' => $array->equipo_serial,
-                    'verficoFuncionamiento' => $array->verifica_funcionamiento_orden,
-                    'servicio' => $array->servicio_orden,
-                    'accesorios' => $array->accesorios_orden,
-                    'adaptador' => $array->serial_adaptador_orden,
-                    'caracteristicas' => $array->caracteristicas_equipo_orden,
-                    'dano' => $array->descripcion_dano_orden,
-                    'tecnico' => $array->name,
-                    'garantia' => $array->garantia_orden,
-                    'contrato' => $array->contrato_orden
+    public function guardarOrden(Request $request)
+    {
+        DB::beginTransaction(); // Iniciamos transacción para garantizar atomicidad
 
+        try {
+            // Validar entrada
+            $validatedData = $request->validate([
+                'cliente_id' => 'required|integer',
+                'equipo_id' => 'required|integer',
+                'servicio' => 'nullable|array',
+                'accesorios' => 'nullable|string',
+                'descripcion_dano' => 'nullable|string',
+                'tecnico' => 'required|integer',
+                'garantia' => 'nullable|boolean',
+                'contrato' => 'nullable|string',
+                'notificar_email' => 'nullable|string',
+                'notificar_whatsapp' => 'nullable|string',
+                'usuario_empresa' => 'nullable|string',
+                'serialAdaptatador' => 'nullable|string',
+                'verifica_funcionamiento' => 'nullable|string',
+                'caracteristicas_equipo' => 'required|string',
+            ]);
+
+            // Calcular fechas
+            $findVencimiento = ParametrosDetalle::where('nombre' ,'VENCIMIENTO ORDEN')->first();
+            $diasVencimientoPm = $findVencimiento->valor ?? 5;
+            $diasVencimiento = $this->calcularDiasHabiles($diasVencimientoPm);
+            $fechaVencimiento = now()->addDays($diasVencimiento);
+
+            // Crear y guardar orden
+            $orden = new OrdenServicio();
+            $orden->id_cliente_orden = $validatedData['cliente_id'];
+            $orden->id_equipo_orden = $validatedData['equipo_id'];
+            $orden->fecha_creacion_orden = now();
+            $orden->fecha_estimada_orden = $fechaVencimiento;
+            $orden->accesorios_orden = $validatedData['accesorios'] ?? '';
+            $orden->descripcion_dano_orden = $validatedData['descripcion_dano'] ?? '';
+            $orden->id_tecnico_orden = $validatedData['tecnico'];
+            $orden->garantia_orden = $validatedData['garantia'] ?? false;
+            $orden->contrato_orden = $validatedData['contrato'] ?? '';
+            $orden->serial_adaptador_orden = $validatedData['serialAdaptatador'] ?? '';
+            $orden->verifica_funcionamiento_orden = $validatedData['verifica_funcionamiento'] ?? '';
+            $orden->caracteristicas_equipo_orden = $validatedData['caracteristicas_equipo'] ?? '';
+            $orden->id_cliente_usuario_orden = $validatedData['usuario_empresa'] ?? null;
+            $orden->servicio_orden = implode(' - ', $validatedData['servicio']);
+            $orden->estadoOrden = 1; // Estado inicial
+            $orden->emailSend = 1;   // No enviado
+            $orden->user_created = auth()->user()->name;
+            $orden->save();
+
+            // Guardar observación inicial
+            Observacion::create([
+                'id_ordenServicio' => $orden->id,
+                'tipo_observacion' => 1, // Diagnóstico
+                'descripcion_observacion' => 'DIAGNÓSTICO AUTOMÁTICO',
+                'user_observacion' => auth()->user()->name,
+            ]);
+
+            $dataMedios = [
+                'notificar_email' => $validatedData['notificar_email'],
+                'notificar_whatsapp' => $validatedData['notificar_whatsapp'],
+                'origen' => 'ingreso'
             ];
+            // Manejo de notificaciones
+            $this->manejarNotificaciones($orden, $dataMedios);
+            DB::commit(); // Confirmar transacción
+            return response()->json(['success' => true ,'mensaje' => 'Orden guardada exitosamente', 'dataOrden' => $orden], 201);
+        } catch (\Exception $e) {
+            DB::rollBack(); // Revertir transacción
+            return response()->json(['success' => false , 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Calcular días hábiles a partir de un número de días.
+     */
+    private function calcularDiasHabiles($dias)
+    {
+        $habiles = 0;
+        $actual = now();
+
+        while ($habiles < $dias) {
+            $actual->addDay();
+            if ($actual->isWeekday()) {
+                $habiles++;
+            }
+        }
+
+        return $actual->diffInDays(now());
+    }
+
+    /**
+     * Maneja notificaciones por correo y WhatsApp.
+     */
+    private function manejarNotificaciones(OrdenServicio $orden, $dataMedios)
+    {
+        try {
+
+            switch ( $dataMedios['origen']) {
+                case 'ingreso':
+                    $data = $this->prepararDatosOrdenIngresoPdf($orden);
+                    $data['dataPdf']['bodyValidate'] = "true";
+                    $pdf = PDF::loadView('modulos.pdf.ordenIngreso', $data['dataPdf']);
+                    $funcionEmail = 'ordenEntradaEmail';
+                    $nameFilePdf =  'orden_ingreso_#_' .$orden->id . '.pdf';
+                    $parametroMsjfind = 'MENSAJE_WHATSAPP_INGRESO';
+                    $array = $data['modelSql'];
+                    break;
+                
+                case 'salida':
+                    $data = $this->prepararDatosOrdenSalidaPdf($orden);    
+                    $repuesto = $data['repuesto'];
+                    $pdf = PDF::loadView('modulos.pdf.ordenSalida', $data['dataPdf'] ,  compact('repuesto') );
+                    $funcionEmail = 'ordenSalidaEmail';
+                    $nameFilePdf =  'orden_salida_#_' .$orden->id . '.pdf';
+                    $parametroMsjfind = 'MENSAJE_WHATSAPP_SALIDA';
+                    $array = $data['modelSql'];
+                    break;
+                default:
+                    throw new Exception("No se ha enviado un origen correcto");                    
+                break;
+            }
+    
+
+            $notificarEmail = $dataMedios['notificar_email'];
+            $notificarWhatsAppQ = $dataMedios['notificar_whatsapp'];
+            // Enviar correo
+            if ($notificarEmail == 'SI') {  
+                
+                Observacion::create([
+                    'id_ordenServicio' => $orden->id,
+                    'tipo_observacion' => 3, // observacion
+                    'descripcion_observacion' => 'Se envia notificacion de '.$dataMedios['origen']. ' via correo.',
+                    'created_at_observacion' =>date("Y-m-d H:i:s"),
+                    'user_observacion' => 'Notificaciones',
+                ]);
+
+                $emailSend = new sendEmail();              
+                $emailSend = $emailSend->{$funcionEmail}($pdf,  $array);
+                OrdenServicio::where('id_orden' , $orden->id)
+                ->update(['emailSend' => 2]); // Marcar correo como enviado
+            }
+    
+            // Notificar por WhatsApp
+            if ($notificarWhatsAppQ == 'SI') {
+
+                Observacion::create([
+                    'id_ordenServicio' => $orden->id,
+                    'tipo_observacion' => 3, // observacion
+                    'descripcion_observacion' => 'Se envia notificacion de '.$dataMedios['origen']. ' via WhatsApp al numero de celular -> '.$array->cliente_celular,
+                    'created_at_observacion' =>date("Y-m-d H:i:s"),
+                    'user_observacion' => 'Notificaciones',
+                ]);
+
+                $replace = [
+                    "nombre_cliente" => $array->cliente_nombres,
+                    "equipo" => $array->equipo_tipo . ' ' . $array->equipo_marca . ' ' .$array->equipo_referencia,
+                    "descripcion_dano" => $array->descripcion_dano_orden,
+                    "numero_orden" => $orden->id
+                ];
+
+                $parametroMsj = ParametrosDetalle::where('nombre' , $parametroMsjfind)->first();
+                // Reemplazar las variables en la plantilla
+                $template = $parametroMsj->descripcion;
+                foreach ($replace as $key => $value) {
+                    $template = str_replace("{" . $key . "}", $value, $template);
                 }
 
+                $data['dataPdf']['bodyValidate'] = "true";
+                // Nombre del archivo y ruta donde se guardará
+                $filePath = public_path( 'uploads/pdf/'. $nameFilePdf);
+                // Guardar el PDF en la ruta especificada
+                $pdf->save($filePath);
 
-        if( $dataArray->id_cliente_usuario_orden != null){
+                $fileUrl = url('uploads/pdf/' . $nameFilePdf);
 
+                $sendPdf = [
+                    'type' => 'pdf',
+                    'number' =>  $array->cliente_celular,
+                    'pdfBase64' => $fileUrl,// 'https://refillmate.com.co/gosrm/public/uploads/soportes/1732053061_Remision%202%20(3).pdf',
+                    'nameFile' => $nameFilePdf,
+                ];
 
+                $notWhatsPdf = $this->notificarWhatsApp($sendPdf);
+                Log::info('Respuesta de PDF:', ['response' => $notWhatsPdf]);
 
-            $pdfData = DB::table('orden_servicio as orden')
-                    ->join('cliente', 'orden.id_cliente_orden', '=', 'cliente.cliente_id')
-                    ->join('equipo', 'orden.id_equipo_orden', '=', 'equipo.equipo_id')
-                    ->leftjoin('departamentos', 'cliente.departamento_id', '=', 'departamentos.departamento_id')
-                    ->leftjoin('municipios', 'cliente.municipio_id', '=', 'municipios.municipio_id')
-                    ->leftjoin('usuario_empresa', 'orden.id_cliente_usuario_orden', '=', 'usuario_empresa.id_cliente_empresa')
-                    ->join('users', 'users.id', '=', 'orden.id_tecnico_orden')
-                    ->select('cliente.*', 'equipo.*', 'users.name', 'orden.*', 'departamentos.departamento_nombre','municipios.municipio_nombre','usuario_empresa.*' )
-                    ->whereRaw("orden.id_orden = $idOrden")
-                    ->get()->toArray();
-        $array = $pdfData[0];//Caputaramos el Array en un Object
+                $sendMensaje = [
+                    'type' => 'texto',
+                    'number' =>  $array->cliente_celular,
+                    'message' => $template
+                ];
+                $notWhatsMsj = $this->notificarWhatsApp($sendMensaje);
+                Log::info('Respuesta de MSJ:', ['response' => $notWhatsMsj]);
+
+                //Eliminar archivo creado temporal
+                unlink($filePath); // Elimina el archivo
+            }
+        } catch (Exception $e) {
+            //throw $th;
+        }
+
+    }
+
+        /**
+     * Preparar datos para notificación.
+     */
+    private function prepararDatosOrdenSalidaPdf(OrdenServicio $orden)
+    {
+        $idOrden = $orden->id ? $orden->id  : $orden->id_orden;
+
+        $array = DB::table('orden_servicio as orden')
+        ->join('cliente', 'orden.id_cliente_orden', '=', 'cliente.cliente_id')
+        ->join('equipo', 'orden.id_equipo_orden', '=', 'equipo.equipo_id')
+        ->leftJoin('departamentos', 'cliente.departamento_id', '=', 'departamentos.departamento_id')
+        ->leftJoin('municipios', 'cliente.municipio_id', '=', 'municipios.municipio_id')
+        ->join('users', 'users.id', '=', 'orden.id_tecnico_orden')
+        ->leftJoin('usuario_empresa', 'orden.id_cliente_usuario_orden', '=', 'usuario_empresa.id_cliente_empresa')
+        ->select('cliente.*', 'equipo.*', 'users.name', 'orden.*', 'departamentos.departamento_nombre','municipios.municipio_nombre','usuario_empresa.*' )
+        ->whereRaw("orden.id_orden = $idOrden")
+        ->first();
         setlocale(LC_ALL,"es_ES@euro","es_ES","esp");
-        $fechaEntrada = $array->fecha_creacion_orden;
-        $fechaEntrada= strftime("%d %b %Y",strtotime($fechaEntrada));
-        $fechaEstimada = $array->fecha_estimada_orden;
-        $fechaEstimada= strftime("%d %b %Y",strtotime($fechaEstimada));
+
+        // Configurar el idioma de Carbon para que las fechas se muestren en español
+        Carbon::setLocale('es_ES');
+        $fechaEntrada = Carbon::parse($array->fecha_creacion_orden)->format('d M Y');
+        $fechareparacion = Carbon::parse($array->fecha_reparacion_orden)->formatLocalized('%d %b %Y');
+        $fechaEntrega = Carbon::parse($array->fecha_entrega_orden)->formatLocalized('%d %b %Y');
+
 
         $data = [
             'orden' => $array->id_orden,
-            'fecha_ingreso' => $fechaEntrada,
-            'fecha_estimada' => $fechaEstimada,
+            'fecha_ingreso' =>  $fechaEntrada,
+            'fecha_reparacion' =>  $fechareparacion,
+            'fecha_entrega' =>  $fechaEntrega,
             'tipoCliente' => $array->cliente_tipo,
             'nombre' => $array->cliente_nombres,
             'documento' => $array->cliente_documento,
@@ -671,6 +773,76 @@ class OrdenServicioController extends Controller
             'referencia' => $array->equipo_referencia,
             'serial' => $array->equipo_serial,
             'verficoFuncionamiento' => $array->verifica_funcionamiento_orden,
+            'reporteTecnico' => $array->reporte_tecnico_orden,
+            'accesorios' => $array->accesorios_orden,
+            'adaptador' => $array->serial_adaptador_orden,
+            'caracteristicas' => $array->caracteristicas_equipo_orden,
+            'dano' => $array->descripcion_dano_orden,
+            'tecnico' => $array->name,
+            'subTotal' => $array->valor_repuestos_orden,
+            'valorServicio' => $array->valor_servicio_orden,
+            'iva' => $array->iva_orden,
+            'totalOrden' => $array->valor_total_orden,
+        ];
+
+        $repuesto = DB::table('repuesto')
+        ->join('orden_servicio as orden', 'orden.id_orden', '=', 'repuesto.id_orden_servicio_repuesto')
+        ->select('repuesto.*')
+        ->whereRaw("orden.id_orden = $idOrden")
+        ->get()->toArray();
+
+        $response = [
+            "dataPdf" => $data,
+            "modelSql" => $array,
+            "repuesto" => $repuesto
+        ];
+
+        return $response;
+
+    }
+
+    /**
+     * Preparar datos para notificación.
+     */
+    private function prepararDatosOrdenIngresoPdf(OrdenServicio $orden)
+    {
+        $idOrden = $orden->id ? $orden->id  : $orden->id_orden;
+        $array = DB::table('orden_servicio as orden')
+        ->join('cliente', 'orden.id_cliente_orden', '=', 'cliente.cliente_id')
+        ->join('equipo', 'orden.id_equipo_orden', '=', 'equipo.equipo_id')
+        ->leftJoin('departamentos', 'cliente.departamento_id', '=', 'departamentos.departamento_id')
+        ->leftJoin('municipios', 'cliente.municipio_id', '=', 'municipios.municipio_id')
+        ->leftJoin('usuario_empresa', function($join) {
+            $join->on('orden.id_cliente_usuario_orden', '=', 'usuario_empresa.id_cliente_empresa')
+                ->whereNotNull('orden.id_cliente_usuario_orden');
+        })
+        ->join('users', 'users.id', '=', 'orden.id_tecnico_orden')
+        ->select('cliente.*', 'equipo.*', 'users.name', 'orden.*',
+                'departamentos.departamento_nombre', 'municipios.municipio_nombre',
+                'usuario_empresa.*')
+        ->whereRaw("orden.id_orden = ?", [$idOrden])
+        ->first();
+        setlocale(LC_ALL, "es_ES@euro", "es_ES", "esp");
+        $fechaEntrada = strftime("%d %b %Y", strtotime($array->fecha_creacion_orden));
+        $fechaEstimada = strftime("%d %b %Y", strtotime($array->fecha_estimada_orden));
+        $data = [
+            'orden' => $array->id_orden,
+            'fecha_ingreso' => $fechaEntrada,
+            'fecha_estimada' => $fechaEstimada,
+            'tipoCliente' => $array->cliente_tipo,
+            'nombre' => $array->cliente_nombres,
+            'documento' => $array->cliente_documento,
+            'correo' => $array->cliente_correo,
+            'telefono' => $array->cliente_telefono,
+            'celular' => $array->cliente_celular,
+            'departamento' => $array->departamento_nombre,
+            'municipio' => $array->municipio_nombre,
+            'direccion' => $array->cliente_direccion,
+            'equipo' => $array->equipo_tipo,
+            'marca' => $array->equipo_marca,
+            'referencia' => $array->equipo_referencia,
+            'serial' => $array->equipo_serial,
+            'verficoFuncionamiento' => $array->verifica_funcionamiento_orden,
             'servicio' => $array->servicio_orden,
             'accesorios' => $array->accesorios_orden,
             'adaptador' => $array->serial_adaptador_orden,
@@ -678,41 +850,63 @@ class OrdenServicioController extends Controller
             'dano' => $array->descripcion_dano_orden,
             'tecnico' => $array->name,
             'garantia' => $array->garantia_orden,
-            'contrato' => $array->contrato_orden
+            'contrato' => $array->contrato_orden,
+            'celular_usuario' => $array->usuario_celular ?? null, 
+            'dependencia' => $array->usuario_dependencia ?? null, 
+            'usuario' => $array->usuario_nombre ?? null
+        ];
+
+        $response = [
+            "dataPdf" => $data,
+            "modelSql" => $array
+        ];
+        return $response;
+
+    }
+
+    /**
+     * Lógica para enviar notificación por WhatsApp.
+     */
+    private function notificarWhatsApp($array)
+    {
+        
+        switch ($array['type']) {
+            case 'texto':
+            // Datos del cuerpo de la solicitud
+            $data = [
+                'type' => $array['type'],
+                'number' => $array['number'],
+                'message' => $array['message'],
             ];
-            }
-            $emailSend = $array->emailSend;
-            //CAMBIAMOS ESTA, SI DECIDE NO ENVIAR POR CORREO LA ORDEN
-            if( $request->get("email") == 'NO') {
-                $emailSend = 2;
-            }
-            $pdf = PDF::loadView('modulos.pdf.ordenIngreso', $data );
+                break;
+            case 'imagen':
+            // Datos del cuerpo de la solicitud
+            $data = [
+                'type' => $array['type'],
+                'number' => $array['number'],
+                'message' => $array['message'],
+                'imageUrl' => $array['imageUrl']
+            ];
+                break;
+            case 'pdf':
+        // Datos del cuerpo de la solicitud
+            $data = [
+                'type' => $array['type'],
+                'number' =>  $array['number'],
+                'pdfBase64' => $array['pdfBase64'],
+                'nameFile' => $array['nameFile'],
+            ];
+            break;                
+        }
+        $whatsappApi = new WhatsappController(); 
+        $rs = $whatsappApi->sendMessage($data);
 
-            if($emailSend != 2){
-                $data['bodyValidate'] = 'true';
-                
-                $pdfEmail = PDF::loadView('modulos.pdf.ordenIngreso', $data );
+        if($rs['success'] == false){
+            return false;
+        }
+        return true;
+    }
 
-                    DB::table('orden_servicio')
-                    ->where('id_orden', $idOrden)
-                    ->update(
-                        [
-                        'emailSend' => 2 //Cambiamos de estado el envio de EMAIL , para evitar que se siga enviando el correo
-                        ]
-                        );
-                $SendEmail =  sendEmail::ordenEntradaEmail($pdfEmail, $array);
-
-            }
-
-
-            $numeroOrden = $array->id_orden ;
-            $pdf->setPaper('carta' , 'landscape'); // Establece la orientación horizontal
-
-            return $pdf->stream('Orden entrada N° ' .($numeroOrden).' .pdf');
-
-
-
-}
 public function ordenEntradaPDF($idOrden)
    {
 
@@ -720,128 +914,17 @@ public function ordenEntradaPDF($idOrden)
 
         // $dataArray = OrdenServicio::latest('id_orden')->first();
         $idOrden =  decrypt($idOrden) ;
-        //  $id = $dataArray['id_orden'];
-        $dataArray = DB::table('orden_servicio')
-        ->where('id_orden', '=', $idOrden)->get()->toArray();
-        $dataArray = $dataArray[0];
 
+        $orden = new OrdenServicio();
+        $orden = $orden->where('id_orden' ,$idOrden )->first();
+        $data = $this->prepararDatosOrdenIngresoPdf($orden);
 
-            if($dataArray->id_cliente_usuario_orden == null || $dataArray->id_cliente_usuario_orden == 0){
-                $pdfData = DB::table('orden_servicio as orden')
-                ->join('cliente', 'orden.id_cliente_orden', '=', 'cliente.cliente_id')
-                ->join('equipo', 'orden.id_equipo_orden', '=', 'equipo.equipo_id')
-                ->leftjoin('departamentos', 'cliente.departamento_id', '=', 'departamentos.departamento_id')
-                ->leftjoin('municipios', 'cliente.municipio_id', '=', 'municipios.municipio_id')
-                ->join('users', 'users.id', '=', 'orden.id_tecnico_orden')
-                ->select('cliente.*', 'equipo.*','users.name', 'orden.*', 'departamentos.departamento_nombre','municipios.municipio_nombre' )
-                ->whereRaw("orden.id_orden = $idOrden")
-                ->get()->toArray();
+        $pdf = PDF::loadView('modulos.pdf.ordenIngreso', $data['dataPdf'] );
 
-                $array = $pdfData[0];
-                setlocale(LC_ALL,"es_ES@euro","es_ES","esp");
-                $fechaEntrada = $array->fecha_creacion_orden;
-                $fechaEntrada= strftime("%d %b %Y",strtotime($fechaEntrada));
-                $fechaEstimada = $array->fecha_estimada_orden;
-                $fechaEstimada= strftime("%d %b %Y",strtotime($fechaEstimada));
-                $data = [
-                    'orden' => $array->id_orden,
-                    'fecha_ingreso' => $fechaEntrada,
-                    'fecha_estimada' => $fechaEstimada,
-                    'tipoCliente' => $array->cliente_tipo,
-                    'nombre' => $array->cliente_nombres,
-                    'documento' => $array->cliente_documento,
-                    'correo'=> $array->cliente_correo,
-                    'telefono' => $array->cliente_telefono,
-                    'celular' => $array->cliente_celular,
-                    'departamento' => $array->departamento_nombre,
-                    'municipio' => $array->municipio_nombre,
-                    'direccion' => $array->cliente_direccion,
-                    'equipo' => $array->equipo_tipo,
-                    'marca' => $array->equipo_marca,
-                    'referencia' => $array->equipo_referencia,
-                    'serial' => $array->equipo_serial,
-                    'verficoFuncionamiento' => $array->verifica_funcionamiento_orden,
-                    'servicio' => $array->servicio_orden,
-                    'accesorios' => $array->accesorios_orden,
-                    'adaptador' => $array->serial_adaptador_orden,
-                    'caracteristicas' => $array->caracteristicas_equipo_orden,
-                    'dano' => $array->descripcion_dano_orden,
-                    'tecnico' => $array->name,
-                    'garantia' => $array->garantia_orden,
-                    'contrato' => $array->contrato_orden
+        $numeroOrden =  $idOrden ;
+        $pdf->setPaper('carta' , 'landscape'); // Establece la orientación horizontal
 
-            ];
-                }
-
-
-        if( $dataArray->id_cliente_usuario_orden != null){
-
-
-
-            $pdfData = DB::table('orden_servicio as orden')
-                    ->join('cliente', 'orden.id_cliente_orden', '=', 'cliente.cliente_id')
-                    ->join('equipo', 'orden.id_equipo_orden', '=', 'equipo.equipo_id')
-                    ->leftjoin('departamentos', 'cliente.departamento_id', '=', 'departamentos.departamento_id')
-                    ->leftjoin('municipios', 'cliente.municipio_id', '=', 'municipios.municipio_id')
-                    ->leftjoin('usuario_empresa', 'orden.id_cliente_usuario_orden', '=', 'usuario_empresa.id_cliente_empresa')
-                    ->join('users', 'users.id', '=', 'orden.id_tecnico_orden')
-                    ->select('cliente.*', 'equipo.*', 'users.name', 'orden.*', 'departamentos.departamento_nombre','municipios.municipio_nombre','usuario_empresa.*' )
-                    ->whereRaw("orden.id_orden = $idOrden")
-                    ->get()->toArray();
-        $array = $pdfData[0];//Caputaramos el Array en un Object
-        setlocale(LC_ALL,"es_ES@euro","es_ES","esp");
-        $fechaEntrada = $array->fecha_creacion_orden;
-        $fechaEntrada= strftime("%d %b %Y",strtotime($fechaEntrada));
-        $fechaEstimada = $array->fecha_estimada_orden;
-        $fechaEstimada= strftime("%d %b %Y",strtotime($fechaEstimada));
-
-        $data = [
-            'orden' => $array->id_orden,
-            'fecha_ingreso' => $fechaEntrada,
-            'fecha_estimada' => $fechaEstimada,
-            'tipoCliente' => $array->cliente_tipo,
-            'nombre' => $array->cliente_nombres,
-            'documento' => $array->cliente_documento,
-            'correo'=> $array->cliente_correo,
-            'telefono' => $array->cliente_telefono,
-            'celular' => $array->cliente_celular,
-            'departamento' => $array->departamento_nombre,
-            'municipio' => $array->municipio_nombre,
-            'direccion' => $array->cliente_direccion,
-            'celular_usuario' => $array->usuario_celular,
-            'dependencia' => $array->usuario_dependencia,
-            'usuario' => $array->usuario_nombre,
-            'equipo' => $array->equipo_tipo,
-            'marca' => $array->equipo_marca,
-            'referencia' => $array->equipo_referencia,
-            'serial' => $array->equipo_serial,
-            'verficoFuncionamiento' => $array->verifica_funcionamiento_orden,
-            'servicio' => $array->servicio_orden,
-            'accesorios' => $array->accesorios_orden,
-            'adaptador' => $array->serial_adaptador_orden,
-            'caracteristicas' => $array->caracteristicas_equipo_orden,
-            'dano' => $array->descripcion_dano_orden,
-            'tecnico' => $array->name,
-            'garantia' => $array->garantia_orden,
-            'contrato' => $array->contrato_orden
-            ];
-            }
-            $emailSend = $array->emailSend;
-
-            $pdf = PDF::loadView('modulos.pdf.ordenIngreso', $data );
-            $pdf->setPaper('carta' , 'landscape'); // Establece la orientación horizontal
-
-             $numeroOrden = $array->id_orden ;
-            return $pdf->stream('Orden entrada N° ' .($numeroOrden).' .pdf');
-
-        // $emailpdf = new MailEmailPdf;
-
-
-        //  Mail::to('rafael.puentez@gmail.com')->send($emailpdf)->attachData($pdf->output(), "test.pdf");
-
-
-
-        //   Mail::to("rafael.puentez@gmail.com")->send(new EmailPdf($datosCorreo));
+        return $pdf->stream('Orden entrada N° ' .($numeroOrden).' .pdf');
 
 }
 public function cambiarEstadoOrden(Request $request)
@@ -858,7 +941,7 @@ public function cambiarEstadoOrden(Request $request)
             ->where('id_orden', $request->idOrden)
             ->update( [
                 'estadoOrden' => $newEstado  ,
-                'fecha_entrega_orden' => null 
+                'fecha_entrega_orden' => null
                 ] );
         }
     } catch (\Throwable $e) {
@@ -882,7 +965,7 @@ public function enviarBodega(Request $request)
             ->where('id_orden', $request->idOrden)
             ->update( [
                 'estadoOrden' => $stateBodega ,
-                'fecha_entrega_orden' => null 
+                'fecha_entrega_orden' => null
                 ] );
         }
     } catch (\Throwable $e) {

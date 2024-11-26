@@ -235,13 +235,15 @@ function valorServicioEdit() {
     ValorServicioInput = document.getElementById("valorservicio");
     btnEdit = document.getElementById("btneditvalorServicio");
     btnSave = document.getElementById("btnsavevalorServicio");
-    btnTerminarOrden = document.getElementById("btnTerminarOrden");
+    // btnTerminarOrden = document.getElementById("btnTerminarOrden");
     checkSinIva = document.getElementById("checkSinIva");
 
 
     ValorServicioInput.style.display = 'block';
+    ValorServicioInput.disabled = false;
+
     btnEdit.style.display = 'none';
     btnSave.style.display = 'block';
-    btnTerminarOrden.style.display = 'none';
+    // btnTerminarOrden.style.display = 'none';
     checkSinIva.disabled = false;
 }

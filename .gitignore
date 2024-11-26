@@ -16,6 +16,7 @@ Homestead.yaml
 /storage/framework/testing
 /storage/framework/views
 
+/public/uploads
 # Ignore IDE files
 .idea
 *.sublime-project

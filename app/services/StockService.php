@@ -10,9 +10,9 @@ use Illuminate\Support\Facades\DB;
 class StockService
 {
     //actualiza el stock
-    public function adjustStock($productId, $quantity, $type)
+    public function adjustStock($productId, $quantity, $type , $origin , $originNumber)
     {
-        DB::transaction(function () use ($productId, $quantity, $type) {
+        DB::transaction(function () use ($productId, $quantity, $type, $origin , $originNumber) {
             $product = Productos::findOrFail($productId);
 
             if ($type == 'ingreso') {
@@ -27,6 +27,8 @@ class StockService
                 'product_id' => $productId,
                 'type' => $type,
                 'quantity' => $quantity,
+                'origin' => $origin,
+                'number_origin' => $originNumber
             ]);
         });
     }

@@ -3,7 +3,8 @@ $(document).ready(function () {
     $('#btnMovimiento').prop('checked', true);
     // Muestra el contenido correspondiente al botón seleccionado
     showContent();
-    
+    fieldRequired();//agregar * a los campos obligatorios
+
         // Manejador de clic para el botón de exportación
         $('#exportarExcel').click(function() {
             exportarTablaAExcel($('#miTabla'));
@@ -25,6 +26,24 @@ $(document).ready(function () {
             a.download = 'reporte_'+ formatoFecha +'.xls';
             a.click();
         }
+
+        $('#tipo').change(function() {
+            var tipo = $(this).val();
+            
+            if (tipo === 'ingreso') {
+                $('#soporte_div').hide();                
+                $('#soporte').prop('required', false);
+            } else if (tipo === 'salida') {
+                $('#numero_orden_div').hide();
+                $('#soporte_div').show();                
+                $('#soporte').prop('required', true);
+            } else {
+                $('#soporte_div').hide();
+                $('#numero_orden_div').hide();
+                $('#soporte').prop('required', false);
+            }
+            fieldRequired();
+        });
 });
 
 function showContent() {
@@ -69,29 +88,37 @@ $('#btn-guardar').on('click', function () {
     valor = valor.replace(/\$/g, ''); // Eliminar signo de dólar
 
 
-    if (valor == '' || tipo == '' || descripcion == '' || metodo_pago == '') {
+    soporte = $('#soporte')[0].files[0]; // Obtener el archivo seleccionado
+    var formulario = $('#registrarCaja');
+
+    if (!validarCamposObligatorios(formulario)) {
         Swal.fire({
             icon: 'warning',
-            title: 'Oops...',
-            html: '<b><i>Faltan campos por digitar.</i></b> ',
-            timer: 1100,
+            text: 'Por favor, complete todos los campos obligatorios *',
+            timer: 1200,
             showConfirmButton: false
         });
-        return false;
-    };
-        //mostrar spinner
-        showpreloader();
+        return;
+    }
+
+    // Mostrar spinner
+    showpreloader();
+
+    // Crear un objeto FormData
+    var formData = new FormData();
+    formData.append('valor', valor);
+    formData.append('tipo', tipo);
+    formData.append('descripcion', descripcion);
+    formData.append('num_orden', num_orden);
+    formData.append('metodo_pago', metodo_pago);
+    formData.append('soporte', soporte);
 
     $.ajax({
         type: "POST",
         url: "guardarMovimientocaja",
-        data: {
-            valor: valor,
-            tipo: tipo,
-            descripcion: descripcion,
-            num_orden: num_orden,
-            metodo_pago : metodo_pago
-        },
+        data: formData,
+        contentType: false,
+        processData: false,
         success: function (data) {
             if (data.status == true) {
                                         // Limpiar los campos de entrada
@@ -100,8 +127,7 @@ $('#btn-guardar').on('click', function () {
                 $('#numero_orden').val("");
                 $('#metodo_pago').val("");
                 $('#tipo').val("");
-
-    
+                $('#soporte').val(""); // Limpiar el campo de archivo  
             
                 Swal.fire({
                     icon: 'success',
@@ -190,6 +216,11 @@ function getDataMovimientos(){
 
                 for (var i = 0; i < data.data.length; i++) {
                     var movimiento = data.data[i];
+                        // Crear un botón de enlace para ver el archivo
+                    var botonVerArchivo = '';
+                    if (movimiento.ruta_soporte) {
+                        botonVerArchivo = '<a href=".' + movimiento.ruta_soporte + '" target="_blank" class="btn btn-primary btn-sm">Ver Archivo</a>';
+                    }
                     table.row.add([
                         formatarFechaHora(movimiento.created_at),
                         movimiento.tipo,
@@ -197,6 +228,7 @@ function getDataMovimientos(){
                         movimiento.metodo_pago,
                         movimiento.descripcion,
                         movimiento.orden_id,
+                        botonVerArchivo
                         // Agrega más columnas según tus datos
                     ]).draw();
                 }

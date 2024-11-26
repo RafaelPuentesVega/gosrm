@@ -40,10 +40,21 @@ class CajaController extends Controller
         "orden_id" => $request->get('num_orden'),
         "user_creation" => auth()->user()->name,
         "metodo_pago" => $request->get('metodo_pago'),
+        "ruta_soporte" => ''
       ];
 
+      // Llamar a la función para guardar el archivo si existe
+      if ($request->hasFile('soporte')) {
+          $saveFile = $this->saveFileSoporte($request->file('soporte'));
+        if($saveFile["success"] == false){
+          throw new \Exception($saveFile["message"]);          
+        }
+        $saveData['ruta_soporte'] = $saveFile["ruta"];
+      }
+
       $MovimientoCajaService->guardarMovimientoCaja($saveData);
-      
+
+
     } catch (\Exception $e) {
       $response = ["status" => false, "message" => "Ocurrio un error guardando", "error" => $e->getMessage()];
     }
@@ -53,6 +64,29 @@ class CajaController extends Controller
       return response()->json($response);
 
     }
+  }
+  
+  public function saveFileSoporte($file)
+  { 
+      $response = [
+        "success" => true,
+        "message" => "Guardado correctamente"
+      ];
+      try {
+        $pathUploads = "/uploads/soportes";
+          // Definir la ruta donde se guardará el archivo
+          $destinationPath = public_path($pathUploads);
+          $fileName = time() . '_' . $file->getClientOriginalName();
+          $file->move($destinationPath, $fileName);
+          
+          $filePath = '/uploads/soportes/' . $fileName;
+          $response['ruta'] = $filePath;
+      } catch (\Exception $e) {
+        $response['ruta'] = "Error al guardar el archivo: " .$e->getMessage();
+        $response['success'] = false;
+      }
+
+      return $response;
   }
 
   public function getDataMovimientos(Request $request)

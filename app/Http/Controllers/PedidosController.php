@@ -71,7 +71,7 @@ class PedidosController extends Controller
             $idPedido =  $pedidos->id;
             foreach ($productoArray as $key => $value) {
 
-                $stockService->adjustStock($value['id'], $value['cantidad'], 'ingreso');
+                $stockService->adjustStock($value['id'], $value['cantidad'], 'ingreso' , 'pedido' , $idPedido);
                 $stockService->updateLastValueAndSupplier($value['id'], $value['precio'], $proveedor->nombre);
 
                 $dataDetalleRemision = [

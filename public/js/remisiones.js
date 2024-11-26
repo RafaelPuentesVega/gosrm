@@ -2,8 +2,9 @@
 var productosArray = [];
 var clienteId = '';
 var productoId = '';
+var baseURL = '';
 $(document).ready(function() {
-
+    baseURL = getUrlBase();
     fieldRequired();//agregar * a los campos obligatorios
 
     //abrir modal producto
@@ -66,7 +67,7 @@ $(document).ready(function() {
     $("#remisionNombreProducto").autocomplete({
         source: function(request, response) {
             $.ajax({
-                url: "autocompleteNombreProducto",
+                url: baseURL+"/autocompleteNombreProducto",
                 dataType: "json",
                 data: {
                     term: request.term
@@ -243,7 +244,7 @@ function completarProducto(id){
 
     showpreloader();
     $.ajax({
-        url: "getProductoId",
+        url: baseURL+"/getProductoId",
         dataType: "json",
         data: {
             id: id
@@ -279,7 +280,6 @@ function completarProducto(id){
 }
 
 function loadTableBuscarProducto(){
-
     // Destruir la tabla existente si ya está inicializada
     if ($.fn.DataTable.isDataTable('#tablaBuscarProductos')) {
         $('#tablaBuscarProductos').DataTable().destroy();
@@ -290,7 +290,7 @@ function loadTableBuscarProducto(){
         responsive: true,
         "language": idioma_espanol,
         ajax: {
-            url: 'getproductos',
+            url: baseURL+'/getproductos',
             dataSrc: 'data' 
         },
         columns: [

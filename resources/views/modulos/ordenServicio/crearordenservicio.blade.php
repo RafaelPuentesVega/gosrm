@@ -487,7 +487,7 @@
     <script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap.min.js"></script>
-    <script src="{!! url('js/crearorden.js?v=2.4') !!}"></script>
+    <script src="{!! url('js/crearorden.js?v=2.5') !!}"></script>
     <script src="{!! url('assets/js/toastr.min.js') !!}"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 @endsection

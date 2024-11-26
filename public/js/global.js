@@ -77,6 +77,12 @@ function formatoPreciovalorNumero(valor) {
     return  valor;
 }
 
+function getUrlBase() {
+
+    valor = $('#urlBase').data('gc-url');
+    return  valor;
+}
+
 function fechaActual(){
     var today = new Date();
     var year = today.getFullYear();

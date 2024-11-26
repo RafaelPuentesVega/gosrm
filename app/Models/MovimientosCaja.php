@@ -19,6 +19,7 @@ class MovimientosCaja extends Model
         'descripcion',
         'tipo',
         'orden_id',
-        'user_creation'
+        'user_creation',
+        'ruta_soporte'
 ];
 }

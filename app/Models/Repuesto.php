@@ -9,6 +9,8 @@ class Repuesto extends Model
 {
     use HasFactory;
     protected $table = "repuesto";
+    protected $primaryKey = 'id_repuesto';
+
     protected $fillable = [
         'id_repuesto',
         'id_orden_servicio_repuesto',
@@ -19,7 +21,8 @@ class Repuesto extends Model
         'delete_at_repuesto',
         'valor_total_repuesto',
         'cantidad_repuesto',
-        'estado_repuesto'
+        'estado_repuesto',
+        'id_producto'
     ];
     public $timestamps = false;
 }

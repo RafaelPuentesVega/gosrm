@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Repuesto;
+use App\Services\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -29,6 +30,7 @@ class RepuestoController extends Controller
         $repuesto->user_creation_repuesto = $user;
         $repuesto->created_at_repuesto = $fechaActual;
         $repuesto->estado_repuesto = $estadoRepuesto;
+        $repuesto->id_producto = $request->idProducto;
         $repuesto->valor_total_repuesto = 0;///GUARDAMOS EL VALOR EN 0 PARA PODER REALIZAR LA SUMA EN LA VISTA
         $repuesto->save();
 
@@ -44,9 +46,11 @@ class RepuestoController extends Controller
         $idRepuesto = $request->idRepuesto;
         $valorTotal = $request->cantidadRepuesto * $request->precioUnitario;
 
-        DB::table('repuesto')
-            ->where('id_repuesto', $idRepuesto)
-            ->update(
+        $repuesto = Repuesto::where('id_repuesto', $idRepuesto)->first();
+        $idOrden = $repuesto['id_orden_servicio_repuesto'];
+        $idProducto = $repuesto['id_producto'];
+
+        $updateRepuesto = $repuesto->update(
                 [
                 'valor_unitario_repuesto' => $request->precioUnitario,
                 'cantidad_repuesto' => $request->cantidadRepuesto,
@@ -54,6 +58,8 @@ class RepuestoController extends Controller
                 'valor_total_repuesto' => $valorTotal
                 ]
                 );
+        $stockService = new StockService();
+        $stockService->adjustStock($idProducto , $request->cantidadRepuesto, 'salida' , 'orden' , $idOrden );
 
         $response = Array('mensaje' => 'update');
          return json_encode($response);

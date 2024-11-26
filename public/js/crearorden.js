@@ -4,6 +4,7 @@ var equipo_id = '';
 var usuario_empresa = '' ;
 var id = '';
 var emailQuestion = '';
+var whatsappQuestion = '';
 var contrato = '';
 var garantia = '';
 var btnguardar = '';
@@ -172,32 +173,67 @@ $('#btnGuardarOrden').on('click', function(){
         return;
     }
 
-    const swalWithBootstrapButtons = Swal.mixin({
-        customClass: {
-          confirmButton: 'btn btn-success',
-          cancelButton: 'btn btn-danger'
-        },
-      })
-    swalWithBootstrapButtons.fire({
-        title: 'Enviar Correo al cliente?',
-        icon: 'question',
+    Swal.fire({
+        title: 'Selecciona las opciones para notificar al cliente',
+        html: `
+          <div style="text-align: left;">
+            <label>
+              <input type="checkbox" checked id="emailOption"> Enviar por Correo
+            </label><br>
+            <label>
+              <input type="checkbox"  id="whatsappOption"> Enviar por WhatsApp
+            </label>
+          </div>
+        `,
         showCancelButton: true,
-        confirmButtonText: 'Si',
-        cancelButtonText: 'No',
-        reverseButtons: false
-
-      })
-      .then((result) => {
+        confirmButtonText: 'Confirmar',
+        cancelButtonText: 'Cancelar',
+        preConfirm: () => {
+          // Devuelve el estado de las opciones seleccionadas
+          const email = document.getElementById('emailOption').checked;
+          const whatsapp = document.getElementById('whatsappOption').checked;
+          return { email, whatsapp };
+        }
+      }).then((result) => {
         if (result.isConfirmed) {
-             emailQuestion = 'SI';
-             guardarOrdenServicio()
-        } else if (result.dismiss === Swal.DismissReason.cancel) {
-            emailQuestion = 'NO';
-            guardarOrdenServicio()
+          showpreloader();
+          // Usa los resultados seleccionados
+          const { email, whatsapp, sms } = result.value;
+          emailQuestion = email ? 'SI' : 'NO';
+          whatsappQuestion = whatsapp ? 'SI' : 'NO';
+      
+          // Llama a tu función con base en las opciones seleccionadas
+          guardarOrdenServicio();
+        }
+      });
 
-            }
-        })
-});
+//     const swalWithBootstrapButtons = Swal.mixin({
+//         customClass: {
+//           confirmButton: 'btn btn-success',
+//           cancelButton: 'btn btn-danger'
+//         },
+//       })
+//     swalWithBootstrapButtons.fire({
+//         title: 'Enviar Correo al cliente?',
+//         icon: 'question',
+//         showCancelButton: true,
+//         confirmButtonText: 'Si',
+//         cancelButtonText: 'No',
+//         reverseButtons: false
+
+//       })
+//       .then((result) => {
+//         showpreloader();
+//         if (result.isConfirmed) {
+//              emailQuestion = 'SI';
+//              guardarOrdenServicio()
+//         } else if (result.dismiss === Swal.DismissReason.cancel) {
+//             emailQuestion = 'NO';
+//             guardarOrdenServicio()
+
+//             }
+//         })
+ });
 $(document).ready(function() {
     $('#equipo_referencia').on('keyup', function() {
         var referencia = $('#equipo_referencia').val();
@@ -224,6 +260,12 @@ $(document).ready(function() {
                 });
             }
         });
+    });
+    $("#cliente_documento").on("blur", function() {
+        documentoCliente = $('#cliente_documento').val();
+        if(documentoCliente.length > 4){
+            consultarClienteEnter();
+        }
     });
     //Autocomplete cedula
     $('#cliente_documento').on('keyup', function() {
@@ -575,7 +617,7 @@ function guardarCliente() {
             if (json.mensaje === "save") {
                 toastr["success"]("<h6>Se guardo correctamente el Cliente</h6>", "GUARDADO")
                 btnguardar.disabled = true;
-                cliente_id = json.dataCliente.id;
+                cliente_id = json.dataCliente.cliente_id;
             }
             if (json.mensaje === "update") {
                 toastr["info"]("<h6>Se actualizo correctamente el Cliente</h6>", "ACTUALIZACION")
@@ -977,9 +1019,11 @@ function consultarClienteEnter() {
             };
         },
         error: function (xhr, status) {
+            hidepreloader();
             alert('Disculpe, existió un problema en el servidor');
         },
         complete: function (xhr, status) {
+            hidepreloader();
             limpiardatosequipo();
         }
     });
@@ -1007,12 +1051,14 @@ function guardarOrdenServicio() {
             descripcion_dano: descripcion_dano,
             tecnico: tecnico,
             garantia: garantia,
-            contrato: contrato
+            contrato: contrato,
+            notificar_email : emailQuestion,
+            notificar_whatsapp : whatsappQuestion
         },
         type: 'POST',
         dataType: 'json',
         success: function (json) {
-            if (json.mensaje === "save") {
+            if (json.success == true) {
                 toastr["success"]("<h6>Se guardo correctamente la orden </h6>", "GUARDADO")
                 id = json.dataOrden.id;
                 toastr["success"]("<h6>Enviando Orden</h6>", "ENVIANDO")
@@ -1020,15 +1066,24 @@ function guardarOrdenServicio() {
                 }, 2000);
                // window.open ('imprimir_ordeningreso/TBydUpOeWRoeTJjNUE9PSIsInZhbHVlI'+ id +'TBydUpOeWRoeTJjNUE9PSIsInZhbHVlI',"ventana1","width=120,height=300,scrollbars=NO" );
                window.open ('imprimir_ordeningreso/TBydUpOeWRoeTJjNUE9PSIsInZhbHVlI'+ id +'TBydUpOeWRoeTJjNUE9PSIsInZhbHVlI?email='+emailQuestion,"Orden Ingreso","toolbar=0,scrollbars=0,location=0,statusbar=0,menubar=0,resizable=0,width=800,height=600,left = 390,top = 50" );
-
+                hidepreloader();
                 location.reload();
+            }else{
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Ocurrio un error al guardar. Error:: ' +  json.error,
+                    footer: 'intentar guardar nuevamente'
+                  })  
             }
+            
         },
         error: function (xhr, status) {
+            hidepreloader();
             alert('Disculpe, existió un problema en el servidor - Recargue la Pagina');
         },
         complete: function (xhr, status) {
-
+            hidepreloader();
         }
     });
 

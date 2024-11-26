@@ -1,5 +1,10 @@
 var validaAnotacion = null;
 var changeAnotacion = null;
+//abrir modal agregar producto modal
+$('#btnAbrirBuscarProductoOrden').on('click', function() {
+    loadTableBuscarProducto()
+    $('#modalBuscarProducto').modal('show');
+});
 $(document).on("click",  "#btncambiarTecnico", function() {
     let idOrden = $("#idOrden").val();
     showpreloader();
@@ -250,7 +255,11 @@ function guardarAnotacion() {
 function guardarRepuesto() {
     btnguardar = document.getElementById('btnAgregarRepuesto');
     areaTr   = document.getElementById('repuestoIngresado');
-    let repuesto = $("#descripcionRepuesto").val();
+    let repuestoNombre = $("#remisionNombreProducto").val();
+    let productoId = $("#idProducto").val();
+    console.log(!productoId);
+    console.log(!repuestoNombre);
+
     let cantidad = $("#cantidadRepuesto").val();
     let idOrden = $("#idOrden").val();
     if (cantidad.length < 1) {
@@ -263,9 +272,9 @@ function guardarRepuesto() {
         $("#cantidadRepuesto").focus();
         return;
     }
-    if (repuesto.length < 1) {
-        toastr["warning"]("<h6>Digitar repuesto</h6>")
-        $("#descripcionRepuesto").focus();
+    if (!repuestoNombre || !productoId) {
+        toastr["warning"]("<h6>Seleccionar un producto</h6>")
+        $("#remisionNombreProducto").focus();
         return;
     }
     showpreloader()
@@ -273,7 +282,8 @@ function guardarRepuesto() {
     $.ajax({
         url: '../guardarRepuesto',
         data: {
-            repuesto: repuesto,
+            repuesto: repuestoNombre,
+            idProducto: productoId,
             idOrden : idOrden,
             cantidad : cantidad
         },
