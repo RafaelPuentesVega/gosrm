@@ -301,15 +301,14 @@ class OrdenServicioController extends Controller
             ->update( [
                 'estadoOrden' => $estadoOrden ,
                 'fecha_entrega_orden' => $fechaActual,
+                'factura_numero_orden' => $idOrden,
                 'user_entrega' =>$userCreated ] );
 
 
-            $ordenValor = DB::table('orden_servicio')
-            ->where('id_orden', $idOrden)->first();
-
+            $orden = OrdenServicio::where('id_orden' , $idOrden)->first();
             //guardar movimientos en caja
             $movimientoRequest = [
-                'valor' => $ordenValor->valor_total_orden,
+                'valor' => $orden->valor_total_orden,
                 'descripcion' => 'Orden de servicio N° ' . $idOrden,
                 'tipo' => 'ingreso',
                 'orden_id' => $idOrden,
@@ -319,8 +318,16 @@ class OrdenServicioController extends Controller
             $MovimientoCajaService = new MovimientoCajaService();
             $MovimientoCajaService->guardarMovimientoCaja($movimientoRequest);
 
+            $dataMedios = [
+                'notificar_email' => $request->emailQuestion,
+                'notificar_whatsapp' => $request->whatsappQuestion,
+                'origen' => 'salida'
+            ];
+            $orden = OrdenServicio::find($idOrden);
+            // Manejo de notificaciones
+            $this->manejarNotificaciones($orden, $dataMedios);
+
             $response = Array('mensaje' => 'ok' );
-            $pdfOrden =  OrdenServicioController::ordenSalidaPdf( $enviarEmail ,$idOrden);
         } catch (\Exception $e) {
             $response['mensaje'] = 'error';
             $response['error'] = $e->getMessage();
@@ -535,7 +542,7 @@ class OrdenServicioController extends Controller
                 'accesorios' => 'nullable|string',
                 'descripcion_dano' => 'nullable|string',
                 'tecnico' => 'required|integer',
-                'garantia' => 'nullable|boolean',
+                'garantia' => 'nullable|string',
                 'contrato' => 'nullable|string',
                 'notificar_email' => 'nullable|string',
                 'notificar_whatsapp' => 'nullable|string',
@@ -619,14 +626,14 @@ class OrdenServicioController extends Controller
     private function manejarNotificaciones(OrdenServicio $orden, $dataMedios)
     {
         try {
-
+            $idOrden = $orden->id ? $orden->id  : $orden->id_orden;
             switch ( $dataMedios['origen']) {
                 case 'ingreso':
                     $data = $this->prepararDatosOrdenIngresoPdf($orden);
                     $data['dataPdf']['bodyValidate'] = "true";
                     $pdf = PDF::loadView('modulos.pdf.ordenIngreso', $data['dataPdf']);
                     $funcionEmail = 'ordenEntradaEmail';
-                    $nameFilePdf =  'orden_ingreso_#_' .$orden->id . '.pdf';
+                    $nameFilePdf =  'orden_ingreso_No_' .$idOrden . '.pdf';
                     $parametroMsjfind = 'MENSAJE_WHATSAPP_INGRESO';
                     $array = $data['modelSql'];
                     break;
@@ -634,13 +641,13 @@ class OrdenServicioController extends Controller
                 case 'salida':
                     $data = $this->prepararDatosOrdenSalidaPdf($orden);    
                     $repuesto = $data['repuesto'];
+                    $data['dataPdf']['bodyValidate'] = "true";
                     $pdf = PDF::loadView('modulos.pdf.ordenSalida', $data['dataPdf'] ,  compact('repuesto') );
                     $funcionEmail = 'ordenSalidaEmail';
-                    $nameFilePdf =  'orden_salida_#_' .$orden->id . '.pdf';
+                    $nameFilePdf =  'orden_salida_No_' .$idOrden . '.pdf';
                     $parametroMsjfind = 'MENSAJE_WHATSAPP_SALIDA';
                     $array = $data['modelSql'];
                     break;
-                default:
                     throw new Exception("No se ha enviado un origen correcto");                    
                 break;
             }
@@ -652,7 +659,7 @@ class OrdenServicioController extends Controller
             if ($notificarEmail == 'SI') {  
                 
                 Observacion::create([
-                    'id_ordenServicio' => $orden->id,
+                    'id_ordenServicio' => $idOrden,
                     'tipo_observacion' => 3, // observacion
                     'descripcion_observacion' => 'Se envia notificacion de '.$dataMedios['origen']. ' via correo.',
                     'created_at_observacion' =>date("Y-m-d H:i:s"),
@@ -661,7 +668,7 @@ class OrdenServicioController extends Controller
 
                 $emailSend = new sendEmail();              
                 $emailSend = $emailSend->{$funcionEmail}($pdf,  $array);
-                OrdenServicio::where('id_orden' , $orden->id)
+                OrdenServicio::where('id_orden' , $idOrden)
                 ->update(['emailSend' => 2]); // Marcar correo como enviado
             }
     
@@ -669,18 +676,18 @@ class OrdenServicioController extends Controller
             if ($notificarWhatsAppQ == 'SI') {
 
                 Observacion::create([
-                    'id_ordenServicio' => $orden->id,
+                    'id_ordenServicio' => $idOrden,
                     'tipo_observacion' => 3, // observacion
-                    'descripcion_observacion' => 'Se envia notificacion de '.$dataMedios['origen']. ' via WhatsApp al numero de celular -> '.$array->cliente_celular,
+                    'descripcion_observacion' => 'Se envia notificacion de '.$dataMedios['origen']. ' via WhatsApp al numero de celular -> '. $array->cliente_celular,
                     'created_at_observacion' =>date("Y-m-d H:i:s"),
                     'user_observacion' => 'Notificaciones',
                 ]);
-
+                
                 $replace = [
                     "nombre_cliente" => $array->cliente_nombres,
                     "equipo" => $array->equipo_tipo . ' ' . $array->equipo_marca . ' ' .$array->equipo_referencia,
                     "descripcion_dano" => $array->descripcion_dano_orden,
-                    "numero_orden" => $orden->id
+                    "numero_orden" => $idOrden
                 ];
 
                 $parametroMsj = ParametrosDetalle::where('nombre' , $parametroMsjfind)->first();
@@ -691,12 +698,21 @@ class OrdenServicioController extends Controller
                 }
 
                 $data['dataPdf']['bodyValidate'] = "true";
+                
                 // Nombre del archivo y ruta donde se guardará
-                $filePath = public_path( 'uploads/pdf/'. $nameFilePdf);
-                // Guardar el PDF en la ruta especificada
-                $pdf->save($filePath);
 
-                $fileUrl = url('uploads/pdf/' . $nameFilePdf);
+                // Ruta donde se guardará el archivo
+                $pathUploads = "/uploads/pdf";
+                $destinationPath = public_path($pathUploads);
+                
+                // Define el nombre del archivo
+                $fileName = time() . '_' . $nameFilePdf;
+                
+                // Guarda el archivo generado en la ruta
+                $pdf->save($destinationPath . '/' . $fileName);
+                
+                // Generar la URL pública del archivo
+                $fileUrl = url($pathUploads . '/' . $fileName);
 
                 $sendPdf = [
                     'type' => 'pdf',
@@ -706,21 +722,26 @@ class OrdenServicioController extends Controller
                 ];
 
                 $notWhatsPdf = $this->notificarWhatsApp($sendPdf);
-                Log::info('Respuesta de PDF:', ['response' => $notWhatsPdf]);
-
+                //Log::info('Respuesta de PDF:', ['response' => $notWhatsPdf]);
+                
+                
                 $sendMensaje = [
                     'type' => 'texto',
                     'number' =>  $array->cliente_celular,
                     'message' => $template
                 ];
                 $notWhatsMsj = $this->notificarWhatsApp($sendMensaje);
-                Log::info('Respuesta de MSJ:', ['response' => $notWhatsMsj]);
+                //Log::info('Respuesta de MSJ:', ['response' => $notWhatsMsj]);
+                // Define la ruta completa del archivo
+                $filePath = $destinationPath . '/' . $fileName;
 
-                //Eliminar archivo creado temporal
-                unlink($filePath); // Elimina el archivo
+                // Eliminar el archivo creado temporalmente
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                }
             }
         } catch (Exception $e) {
-            //throw $th;
+            
         }
 
     }
@@ -867,44 +888,49 @@ class OrdenServicioController extends Controller
     /**
      * Lógica para enviar notificación por WhatsApp.
      */
-    private function notificarWhatsApp($array)
+    public function notificarWhatsApp($array)
     {
-        
-        switch ($array['type']) {
-            case 'texto':
+        try {
+            switch ($array['type']) {
+                case 'texto':
+                // Datos del cuerpo de la solicitud
+                $data = [
+                    'type' => $array['type'],
+                    'number' => $array['number'],
+                    'message' => $array['message'],
+                ];
+                    break;
+                case 'imagen':
+                // Datos del cuerpo de la solicitud
+                $data = [
+                    'type' => $array['type'],
+                    'number' => $array['number'],
+                    'message' => $array['message'],
+                    'imageUrl' => $array['imageUrl']
+                ];
+                    break;
+                case 'pdf':
             // Datos del cuerpo de la solicitud
-            $data = [
-                'type' => $array['type'],
-                'number' => $array['number'],
-                'message' => $array['message'],
-            ];
-                break;
-            case 'imagen':
-            // Datos del cuerpo de la solicitud
-            $data = [
-                'type' => $array['type'],
-                'number' => $array['number'],
-                'message' => $array['message'],
-                'imageUrl' => $array['imageUrl']
-            ];
-                break;
-            case 'pdf':
-        // Datos del cuerpo de la solicitud
-            $data = [
-                'type' => $array['type'],
-                'number' =>  $array['number'],
-                'pdfBase64' => $array['pdfBase64'],
-                'nameFile' => $array['nameFile'],
-            ];
-            break;                
-        }
-        $whatsappApi = new WhatsappController(); 
-        $rs = $whatsappApi->sendMessage($data);
-
-        if($rs['success'] == false){
+                $data = [
+                    'type' => $array['type'],
+                    'number' =>  $array['number'],
+                    'pdfBase64' => $array['pdfBase64'],
+                    'nameFile' => $array['nameFile'],
+                ];
+                break;                
+            }
+            $whatsappApi = new WhatsappController(); 
+            $rs = $whatsappApi->sendMessage($data);
+    
+            if($rs['success'] == false){
+                return false;
+            }
+            return true;
+        } catch (Exception $e) {
             return false;
+
         }
-        return true;
+
     }
 
 public function ordenEntradaPDF($idOrden)

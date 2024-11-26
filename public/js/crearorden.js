@@ -176,15 +176,16 @@ $('#btnGuardarOrden').on('click', function(){
     Swal.fire({
         title: 'Selecciona las opciones para notificar al cliente',
         html: `
-          <div style="text-align: left;">
-            <label>
-              <input type="checkbox" checked id="emailOption"> Enviar por Correo
-            </label><br>
-            <label>
-              <input type="checkbox"  id="whatsappOption"> Enviar por WhatsApp
-            </label>
-          </div>
-        `,
+        <div style="text-align: left;">
+        <label>
+            <input type="checkbox" checked id="emailOption">
+            <i class="fas fa-envelope" style="color: #007bff;"></i> Correo
+        </label><br>
+        <label>
+            <input type="checkbox" id="whatsappOption">
+            <i class="fab fa-whatsapp" style="color: #25d366;"></i> WhatsApp
+        </label>
+        </div>`,
         showCancelButton: true,
         confirmButtonText: 'Confirmar',
         cancelButtonText: 'Cancelar',

@@ -6,6 +6,8 @@ use App\Models\CategoriaProducto;
 use App\Models\Clientes;
 use App\Models\DetalleRemisiones;
 use App\Models\MovimientosCaja;
+use App\Models\OrdenServicio;
+use App\Models\ParametrosDetalle;
 use App\Models\Productos;
 use App\Models\Remisiones;
 use App\Services\MovimientoCajaService;
@@ -72,7 +74,7 @@ class RemisionController extends Controller
       $idCliente = $request->get('cliente');
       $precioTotal = (int) $request->get('precioTotal');
       $tipoPago = $request->get('tipoPago');
-
+      $whatsApp = $request->get('whatsappQuestion');
       $dataRemision = [
         "fecha" => now(),
         "total" => $precioTotal,
@@ -112,7 +114,12 @@ class RemisionController extends Controller
       ];
       $MovimientoCajaService = new MovimientoCajaService();            
       $MovimientoCajaService->guardarMovimientoCaja($movimientoRequest);
-    
+
+      $dataMedios = [
+        'notificar_whatsapp' => $whatsApp,
+      ];
+    // Manejo de notificaciones
+    $this->manejarNotificaciones($idRemision, $dataMedios);
       DB::commit();
 
 
@@ -129,7 +136,7 @@ class RemisionController extends Controller
 
   }
 
-  public function imprimirRemision($id)
+  public function imprimirRemision($id , $type = null)
   {
 
     try {
@@ -162,16 +169,91 @@ class RemisionController extends Controller
       ->get();
 
 
+      if($type == 'notificacion'){
+        $data['bodyValidate'] = 'true';
+        $pdf = PDF::loadView('modulos.pdf.remision', $data ,  compact('productos')  );
+
+        return $pdf;
+      }
       $pdf = PDF::loadView('modulos.pdf.remision', $data ,  compact('productos')  );
+
       $pdf->setPaper('carta' , 'landscape'); // Establece la orientación horizontal
 
-      return $pdf->stream('Remision ' .('2').'.pdf');
+      return $pdf->stream('Remision ' .$remisiones->cliente_nombres .'.pdf');
 
     } catch (\Exception $e) {
       return view('errors.404');
     }
 
 
+  }
+
+  private function manejarNotificaciones($idRemision , $dataMedios){
+      // Notificar por WhatsApp
+      $notificarWhatsAppQ = $dataMedios['notificar_whatsapp'];
+      $nameFilePdf = "remision";
+      if ($notificarWhatsAppQ == 'SI') {
+
+        $remision = Remisiones::join(Clientes::getTableName() , Clientes::getTableName().'.cliente_id' , Remisiones::getTableName().'.cliente_id' )
+        ->where(Remisiones::getTableName().'.id' , $idRemision)
+        ->first();
+
+        $pdf = $this->imprimirRemision($idRemision , 'notificacion');
+
+        $replace = [
+            "nombre_cliente" => $remision->cliente_nombres
+        ];
+
+        $parametroMsj = ParametrosDetalle::where('nombre' , 'MENSAJE_REMISION')->first();
+        // Reemplazar las variables en la plantilla
+        $template = $parametroMsj->descripcion;
+        foreach ($replace as $key => $value) {
+            $template = str_replace("{" . $key . "}", $value, $template);
+        }
+
+        $data['dataPdf']['bodyValidate'] = "true";
+        
+        // Nombre del archivo y ruta donde se guardará
+
+        // Ruta donde se guardará el archivo
+        $pathUploads = "/uploads/pdf";
+        $destinationPath = public_path($pathUploads);
+        
+        // Define el nombre del archivo
+        $fileName = time() . '_' . $nameFilePdf . '.pdf';
+        
+        // Guarda el archivo generado en la ruta
+        $pdf->save($destinationPath . '/' . $fileName);
+        
+        // Generar la URL pública del archivo
+        $fileUrl = url($pathUploads . '/' . $fileName);
+
+        $sendPdf = [
+            'type' => 'pdf',
+            'number' =>  $remision->cliente_celular,
+            'pdfBase64' => $fileUrl,// 'https://refillmate.com.co/gosrm/public/uploads/soportes/1732053061_Remision%202%20(3).pdf',
+            'nameFile' => $nameFilePdf,
+        ];
+        $servicio = new OrdenServicioController();
+        $notWhatsPdf = $servicio->notificarWhatsApp($sendPdf);
+        //Log::info('Respuesta de PDF:', ['response' => $notWhatsPdf]);
+        
+        
+        $sendMensaje = [
+            'type' => 'texto',
+            'number' =>  $remision->cliente_celular,
+            'message' => $template
+        ];
+        $notWhatsMsj = $servicio->notificarWhatsApp($sendMensaje);
+        //Log::info('Respuesta de MSJ:', ['response' => $notWhatsMsj]);
+        // Define la ruta completa del archivo
+        $filePath = $destinationPath . '/' . $fileName;
+
+        // Eliminar el archivo creado temporalmente
+        if (file_exists($filePath)) {
+           unlink($filePath);
+        }
+    }
   }
 
   /* lista las remisiones creadas*/

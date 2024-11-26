@@ -850,11 +850,11 @@
     {{-- <script src="{!! url('js/jquery.min.js') !!}"></script> --}}
     <script src="{!! url('assets/js/toastr.min.js') !!}"></script>
     <script src="{!! url('js/editOrden.js?version=1.2') !!}"></script>
-    <script src="{!! url('js/entregarOrden.js?v=1.2') !!}"></script>
+    <script src="{!! url('js/entregarOrden.js?v=1.3') !!}"></script>
     <script src="{!! url('js/ordenGeneral.js?v=1.2') !!}"></script>
     <script src="{!! url('js/facturaNumero.js?v=1.0') !!}"></script>
     <script src="{!! url('js/producto_crear.js?v=1') !!}"></script>
-    <script src="{!! url('js/remisiones.js?v=1') !!}"></script>
+    <script src="{!! url('js/remisiones.js?v=1.0') !!}"></script>
 @endsection
 
 

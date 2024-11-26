@@ -468,46 +468,73 @@ function guardarRemision(){
     let precioTotal = productos.reduce((total, producto) => {
         return parseInt(total) + parseInt(producto.subtotal);
     }, 0);
-    let tipoPago =     $('#tipoPagoPedido').val(); 
-    
-    // Crear el objeto de datos
-    let data = {
-        cliente: cliente,
-        productos: productos,
-        precioTotal: parseInt(precioTotal),
-        tipoPago: tipoPago
-    };
-    showpreloader();
-    $.ajax({
-        type: "POST",
-        url: "guardarRemision",
-        data: JSON.stringify(data),
-        contentType: 'application/json; charset=utf-8',
-        dataType: 'json',
-        success: function(data) { 
-            hidepreloader();
-
-            let iconf = data.success ? 'success' : 'error';
-            
-            Swal.fire({
-                icon: iconf,
-                html: '<b><i>' + data.message + '</i></b> ',
-                timer: 2500,
-                showConfirmButton: false
-            });
-            if(data.success){
-                limpiarDatosRemision()
-                window.open ('imprimir_remision/'+ data.idremision,"remision","toolbar=0,scrollbars=0,location=0,statusbar=0,menubar=0,resizable=0,width=800,height=600,left = 390,top = 50" );
-            }
-
-        },
-        error: function (xhr, status) {
-            alert('Disculpe, existió un problema en el servidor - Recargue la Pagina');
-        },
-        complete: function (xhr, status) {
-            hidepreloader();
+    Swal.fire({
+        title: 'Selecciona las opciones para notificar al cliente',
+        html: `
+        <div style="text-align: left;">
+        <label>
+            <input type="checkbox" id="whatsappOption">
+            <i class="fab fa-whatsapp" style="color: #25d366;"></i> WhatsApp
+        </label>
+        </div>`,
+        showCancelButton: true,
+        confirmButtonText: 'Confirmar',
+        cancelButtonText: 'Cancelar',
+        preConfirm: () => {
+          const whatsapp = document.getElementById('whatsappOption').checked;
+          return { whatsapp };
         }
-    });
+      }).then((result) => {
+        if (result.isConfirmed) {
+          showpreloader();
+          // Usa los resultados seleccionados
+          const { whatsapp } = result.value;
+          whatsappQuestion = whatsapp ? 'SI' : 'NO';
+      
+          let tipoPago =     $('#tipoPagoPedido').val(); 
+    
+          // Crear el objeto de datos
+          let data = {
+              cliente: cliente,
+              productos: productos,
+              precioTotal: parseInt(precioTotal),
+              tipoPago: tipoPago,
+              whatsappQuestion : whatsappQuestion
+          };
+          $.ajax({
+              type: "POST",
+              url: "guardarRemision",
+              data: JSON.stringify(data),
+              contentType: 'application/json; charset=utf-8',
+              dataType: 'json',
+              success: function(data) { 
+                  hidepreloader();
+      
+                  let iconf = data.success ? 'success' : 'error';
+                  
+                  Swal.fire({
+                      icon: iconf,
+                      html: '<b><i>' + data.message + '</i></b> ',
+                      timer: 2500,
+                      showConfirmButton: false
+                  });
+                  if(data.success){
+                      limpiarDatosRemision()
+                      window.open ('imprimir_remision/'+ data.idremision,"remision","toolbar=0,scrollbars=0,location=0,statusbar=0,menubar=0,resizable=0,width=800,height=600,left = 390,top = 50" );
+                  }
+      
+              },
+              error: function (xhr, status) {
+                  alert('Disculpe, existió un problema en el servidor - Recargue la Pagina');
+              },
+              complete: function (xhr, status) {
+                  hidepreloader();
+              }
+          });
+        }
+      });
+
+
 }
 function limpiardatosclienteRemision(){
     $('#nombreCliente').val('')

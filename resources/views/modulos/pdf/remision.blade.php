@@ -26,10 +26,20 @@
             margin-left: 55%;
             bottom: 3%;
             width: 47%;
+            font-size: 10px;
             background-color: white;
             border-top: 1px solid black;
         }
 
+        .footer-completa {
+            position: fixed;
+            /* margin-left: 55%; */
+            bottom: 3%;
+            /* width: 47%; */
+            font-size: 10px;
+            background-color: white;
+            border-top: 1px solid black;
+        }
     </style>
 </head>
     
@@ -182,7 +192,12 @@
             <br>
             <br>
             {{-- <p style="font-size: 12px; font-weight: bold; margin: 0% ">TECNICO - {{$tecnico}}</p> --}}
-            <table  class="footer" width="100%" style="font-size: 10px">
+            <table   width="100%" style=""     
+                @empty($bodyValidate)
+                    class="footer"
+                @else
+                    class="footer-completa"
+                @endempty>
                 <tr>
                     <th width="100%"colspan="2"
                         style="border-radius: 5px; height: 30px; font-weight:normal; text-align: left ; border: rgba(0, 0, 0, 0) 1px solid !important">

@@ -10,6 +10,9 @@ class OrdenServicio extends Model
     use HasFactory;
 
     protected $table = "orden_servicio";
+    protected $primaryKey = 'id_orden'; // Nombre de la clave primaria
+    public $incrementing = true;       // Si es una clave autoincremental
+    protected $keyType = 'int';        // Tipo de la clave primaria
     protected $fillable = [
         'id_orden',
         'id_cliente_orden',

@@ -211,7 +211,7 @@
 <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap.min.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-<script src="{!! url('js/remisiones.js?v=1') !!}"></script>
+<script src="{!! url('js/remisiones.js?v=1.0') !!}"></script>
 <script src="{!! url('js/producto_crear.js') !!}"></script>
 
 @endsection
